@@ -15,7 +15,7 @@
   <a href="#license"><img alt="License: MIT OR Apache-2.0" src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue"></a>
   <a href="https://www.rust-lang.org"><img alt="Rust 1.88+" src="https://img.shields.io/badge/rust-1.88%2B-orange?logo=rust"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey">
-  <img alt="Status: alpha" src="https://img.shields.io/badge/status-alpha-yellow">
+  <a href="https://github.com/ardfaiyaz/gitowl/releases/tag/v1.0.0"><img alt="gitowl 1.0" src="https://img.shields.io/badge/gitowl-1.0-blue"></a>
 </p>
 
 <p align="center">
@@ -119,7 +119,7 @@ You can [download a prebuilt release](#option-1-prebuilt-release) or [build from
 
 ### Option 1: Prebuilt release
 
-> **Note:** gitowl is in alpha. Get installers and archives from the [Releases page](https://github.com/ardfaiyaz/gitowl/releases), or [build from source](#build-from-source).
+> **Downloads:** Get installers and archives from the [Releases page](https://github.com/ardfaiyaz/gitowl/releases), or [build from source](#build-from-source).
 
 | Platform | Download | Notes |
 |---|---|---|
@@ -447,7 +447,7 @@ cargo run
 
 ## Roadmap
 
-gitowl is in **alpha**. See [docs/ROADMAP.md](docs/ROADMAP.md) for what's done and what's next, and [CHANGELOG.md](CHANGELOG.md) for release notes.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for what's done and what's next, and [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## License
 
