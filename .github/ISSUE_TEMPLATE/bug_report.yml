@@ -35,7 +35,7 @@ body:
     attributes:
       label: gitowl version
       description: Run `gitowl --version`.
-      placeholder: gitowl 1.0.0
+      placeholder: gitowl 1.0.1
     validations:
       required: true
   - type: dropdown

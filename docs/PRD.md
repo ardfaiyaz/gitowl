@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Updated:** October 29, 2026  
-**Product stage:** Desktop release 1.0 (v1.0.0); Phases A–C and E implemented, Phase D partly implemented
+**Product stage:** Desktop release 1.0.1 (v1.0.1); Phases A–C and E implemented, Phase D partly implemented
 **Command:** `gitowl`  
 **Former working name:** GitNest
 

@@ -13,6 +13,7 @@ mod rewrite;
 mod service;
 mod stash;
 mod tags;
+mod update;
 
 use axum::{
     Json, Router,
@@ -22,7 +23,7 @@ use axum::{
     response::Response,
     routing::post,
 };
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use rust_embed::RustEmbed;
 use serde_json::{Value, json};
 use std::{path::PathBuf, sync::Arc};
@@ -31,9 +32,12 @@ use tokio::sync::Mutex;
 #[derive(Parser)]
 #[command(
     version,
+    args_conflicts_with_subcommands = true,
     about = "Your local Git workspace. One command, a clearer view."
 )]
 struct Cli {
+    #[command(subcommand)]
+    command: Option<CliCommand>,
     /// Repository or a folder inside it. Defaults to the current directory.
     path: Option<PathBuf>,
     /// Port for the local server; 0 picks a free port.
@@ -45,6 +49,38 @@ struct Cli {
     /// Show the Open folder screen instead of opening the current repository.
     #[arg(long)]
     library: bool,
+}
+
+#[derive(Subcommand)]
+enum CliCommand {
+    /// Check GitHub Releases and download a verified upgrade; opens Setup on Windows.
+    Update(update::Options),
+}
+
+#[cfg(test)]
+mod cli_tests {
+    use super::*;
+
+    #[test]
+    fn update_options_are_separate_from_repository_and_server_arguments() {
+        let cli = Cli::try_parse_from(["gitowl", "update", "--check"]).unwrap();
+        assert!(cli.path.is_none());
+        assert!(matches!(
+            cli.command,
+            Some(CliCommand::Update(update::Options {
+                check: true,
+                download_only: false
+            }))
+        ));
+        let cli = Cli::try_parse_from(["gitowl", "./update"]).unwrap();
+        assert_eq!(cli.path, Some(PathBuf::from("./update")));
+        assert!(cli.command.is_none());
+        assert!(Cli::try_parse_from(["gitowl", "update", "--check", "--download-only"]).is_err());
+        // An existing GUI/server argument makes this a repository path, preserving old invocations.
+        let cli = Cli::try_parse_from(["gitowl", "--no-browser", "update"]).unwrap();
+        assert!(cli.command.is_none());
+        assert_eq!(cli.path, Some(PathBuf::from("update")));
+    }
 }
 
 #[derive(RustEmbed)]
@@ -110,6 +146,9 @@ async fn asset(uri: Uri) -> Response {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
+    if let Some(CliCommand::Update(options)) = cli.command {
+        return update::run(options).map_err(Into::into);
+    }
     tracing_subscriber::fmt()
         .with_env_filter("gitowl=info")
         .init();

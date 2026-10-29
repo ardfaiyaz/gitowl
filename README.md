@@ -15,7 +15,7 @@
   <a href="#license"><img alt="License: MIT OR Apache-2.0" src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue"></a>
   <a href="https://www.rust-lang.org"><img alt="Rust 1.88+" src="https://img.shields.io/badge/rust-1.88%2B-orange?logo=rust"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey">
-  <a href="https://github.com/ardfaiyaz/gitowl/releases/tag/v1.0.0"><img alt="gitowl 1.0" src="https://img.shields.io/badge/gitowl-1.0-blue"></a>
+  <a href="https://github.com/ardfaiyaz/gitowl/releases/tag/v1.0.1"><img alt="gitowl 1.0.1" src="https://img.shields.io/badge/gitowl-1.0.1-blue"></a>
 </p>
 
 <p align="center">
@@ -127,9 +127,9 @@ You can [download a prebuilt release](#option-1-prebuilt-release) or [build from
 | macOS (Apple silicon) | `gitowl-v<version>-macos.dmg` | Drag **gitowl.app** to Applications, then set up the command below. Intel Macs: build from source. |
 | Linux (x86_64) | `gitowl_<version>-1_amd64.deb` or `…-x86_64-unknown-linux-gnu.tar.gz` | Built on Ubuntu 24.04. On older distributions, build from source. |
 
-Archive names include the tag prefix, for example `gitowl-v1.0.0-x86_64-pc-windows-msvc.zip`.
+Archive names include the tag prefix, for example `gitowl-v1.0.1-x86_64-pc-windows-msvc.zip`.
 Extract the archive and put its executable in a folder on your PATH. To install a Debian package,
-run `sudo apt install ./gitowl_1.0.0-1_amd64.deb` from the download folder.
+run `sudo apt install ./gitowl_1.0.1-1_amd64.deb` from the download folder.
 
 After moving the macOS app to Applications, make its command available in your terminal:
 
@@ -143,14 +143,14 @@ Every file has a matching `.sha256` checksum. Verify a download before installin
 
 ```sh
 # macOS (download both the asset and its .sha256 file into the same folder)
-shasum -a 256 -c gitowl-v1.0.0-macos.dmg.sha256
+shasum -a 256 -c gitowl-v1.0.1-macos.dmg.sha256
 # Linux
-sha256sum -c gitowl_1.0.0-1_amd64.deb.sha256
+sha256sum -c gitowl_1.0.1-1_amd64.deb.sha256
 ```
 
 ```powershell
 # Windows: download the archive and its .sha256 file into the same folder
-$asset = 'gitowl-v1.0.0-x86_64-pc-windows-msvc.zip'
+$asset = 'gitowl-v1.0.1-x86_64-pc-windows-msvc.zip'
 $expected = (Get-Content "$asset.sha256").Split(' ')[0]
 if ((Get-FileHash $asset -Algorithm SHA256).Hash -ne $expected) {
     throw 'Checksum mismatch. Download the file again before installing.'
@@ -321,6 +321,9 @@ Some features need extra token scopes, which `gh` adds on request:
 gitowl                       # open the repository in the current folder
 gitowl path/to/repository    # open a specific repository (or any folder inside it)
 gitowl --library             # start on the Open folder screen
+gitowl update                # check, verify and start the update (Windows Setup)
+gitowl update --check        # only check whether a newer version is available
+gitowl update --download-only # download the latest package without starting installation
 ```
 
 Outside a repository, gitowl shows a welcome screen with **Open Folder**, **Clone from GitHub** and **New Repository**. Closing the window quits gitowl.
@@ -330,11 +333,43 @@ Outside a repository, gitowl shows a welcome screen with **Open Folder**, **Clon
 | Option | Description |
 |---|---|
 | `[PATH]` | Repository, or a folder inside one. Defaults to the current directory. |
+| `update` | Check GitHub Releases, download the appropriate package and verify its SHA-256 checksum. Opens Setup on Windows or the disk image on macOS; Linux prints installation instructions. |
+| `update --check` | Check the installed and latest stable versions without downloading or installing. |
+| `update --download-only` | Download and verify the latest stable package, even if already up to date, without opening it. Prints the saved path. |
 | `--library` | Show the Open folder screen instead of opening the current repository. |
 | `--no-browser` | Headless mode for development and automated checks: no window, prints a local URL. |
 | `--port <PORT>` | Port for the local server. `0` (the default) picks a free port. |
 | `-h`, `--help` | Show help. |
 | `-V`, `--version` | Show the version. |
+
+### Updating gitowl
+
+The update command is available starting with **1.0.1**. If you have the published 1.0.0
+installer or an older version, install 1.0.1 or later manually once from
+[Releases](https://github.com/ardfaiyaz/gitowl/releases/latest).
+
+Run `gitowl update` from any folder. It contacts the public GitHub Releases API directly;
+GitHub CLI, sign-in, Rust and Node.js are not required. If you already have the latest version,
+it exits without installing anything. It never installs an older version or a prerelease.
+
+- **Windows x64:** downloads the setup `.exe`, verifies the published SHA-256 checksum, and opens
+  the normal setup wizard, including its usual administrator prompt if needed. The command then exits
+  so Setup can replace the executable. Close other gitowl windows and finish the wizard using the same
+  installation location. Your repositories and settings are preserved.
+- **macOS Apple Silicon:** downloads and verifies the `.dmg`, then opens it. Quit gitowl, drag the
+  new app to Applications, and choose Replace.
+- **Linux x64 (GNU/glibc):** downloads and verifies the portable `.tar.gz`, then prints its saved location.
+  Extract it and replace the binary using your original installation method. If you installed the
+  Debian package, download the latest `.deb` from Releases and run `sudo apt install ./gitowl_*.deb`
+  in a folder containing only that downloaded package.
+
+`gitowl update --check` only checks. `gitowl update --download-only` saves the latest package
+and checksum in a unique temporary folder without launching the installer, including when your
+version is already current. You can delete that folder after updating. Missing packages, interrupted
+downloads and checksum mismatches stop the update before installation.
+
+The settings page's **Check for updates** button still reports availability; it does not install updates.
+To open a repository directory literally named `update`, use `gitowl ./update`.
 
 ### Keyboard shortcuts
 

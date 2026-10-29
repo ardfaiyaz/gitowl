@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-gitowl is in alpha. Security fixes go into the latest release only.
+Security fixes go into the latest release only.
 
 | Version | Supported |
 |---|---|
@@ -33,9 +33,14 @@ Knowing the intended boundaries helps you judge what counts as a vulnerability:
 - **No shell.** Git and the GitHub CLI are run as programs with separate arguments; user input is never
   interpolated into a shell command. Paths, branch names, hashes and GitHub names are validated first.
 - **Authentication through Git and `gh`.** Git uses your configured credential helper;
-  GitHub access goes through `gh`, which uses the OS credential store when available and can
+  GitHub repository features go through `gh`, which uses the OS credential store when available and can
   fall back to a plaintext config file. gitowl does not read or store those authentication tokens.
   Actions secret values are passed to `gh` on standard input and are never shown, logged or stored.
+- **Explicit updates.** `gitowl update` contacts the configured repository's public GitHub Releases
+  endpoint over HTTPS without using sign-in tokens. It validates the release and expected asset URL,
+  bounds download sizes, and checks the published SHA-256 before opening an installer. Windows Setup
+  uses its normal permission prompts. The published checksums check download integrity; there is no
+  background updater.
 - **Strict content security policy** in the window: scripts and styles from the app only, images only
   from the app or `data:` URLs, no frames. README content is rendered as plain React elements, never as HTML.
 - **Recoverable by default.** History rewrites, resets and similar actions save a recovery point first;

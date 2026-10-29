@@ -7,6 +7,11 @@ include breaking changes.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-30
+
+### Added
+- `gitowl update` checks public GitHub Releases without GitHub CLI or sign-in, verifies the downloaded package's SHA-256 checksum, and opens Windows Setup or the macOS disk image. Linux downloads the verified portable archive with installation instructions. Includes `--check` and `--download-only` options.
+
 ## [1.0.0] - 2026-10-30
 
 ### Added
@@ -65,7 +70,8 @@ First public alpha release.
 ### Changed
 - macOS/iOS-style interface throughout: segmented controls, alerts for every confirmation, inset grouped settings.
 
-[Unreleased]: https://github.com/ardfaiyaz/gitowl/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/ardfaiyaz/gitowl/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/ardfaiyaz/gitowl/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/ardfaiyaz/gitowl/compare/v0.1.1...v1.0.0
 [0.1.1]: https://github.com/ardfaiyaz/gitowl/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ardfaiyaz/gitowl/releases/tag/v0.1.0
