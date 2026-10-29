@@ -1,0 +1,163 @@
+name: Release
+# Pushing a tag like v0.2.0 builds installers and archives and attaches them to a draft GitHub release.
+# Signing runs only when its secrets exist; without them the artifacts are built unsigned.
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check that the tag matches the package version
+        shell: python
+        run: |
+          import os, tomllib
+          from pathlib import Path
+          version = tomllib.loads(Path('Cargo.toml').read_text())['package']['version']
+          assert os.environ['GITHUB_REF_NAME'] == f'v{version}', 'Tag must match Cargo.toml version'
+          assert f'## [{version}] - ' in Path('CHANGELOG.md').read_text(), 'Add dated release notes first'
+  build:
+    needs: validate
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: macos-15
+            target: aarch64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    env:
+      VERSION: ${{ github.ref_name }}
+      MACOSX_DEPLOYMENT_TARGET: '11.0'
+      # Job-level so step `if:` conditions can test whether signing is configured.
+      WINDOWS_CERT_PFX: ${{ secrets.WINDOWS_CERT_PFX }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Verify runner architecture
+        shell: bash
+        run: rustc -vV | grep -Fx 'host: ${{ matrix.target }}'
+      - name: Install Linux desktop dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libxdo-dev libdbus-1-dev
+      - run: npm ci --prefix frontend
+      - run: npm run lint --prefix frontend
+      - run: npm run build --prefix frontend
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked
+      - run: cargo build --release --locked
+
+      # Windows: optional Authenticode signing, then an Inno Setup installer that adds gitowl to PATH.
+      - name: Sign Windows executable
+        if: runner.os == 'Windows' && env.WINDOWS_CERT_PFX != ''
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX: ${{ secrets.WINDOWS_CERT_PFX }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\cert.pfx", [Convert]::FromBase64String($env:WINDOWS_CERT_PFX))
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" | Select-Object -Last 1
+          & $signtool.FullName sign /f "$env:RUNNER_TEMP\cert.pfx" /p $env:WINDOWS_CERT_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 target\release\gitowl.exe
+      - name: Build Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress }
+          & $iscc "/DAppVersion=$($env:VERSION.TrimStart('v'))" "/DSourceExe=$PWD\target\release\gitowl.exe" "/O$PWD\dist" packaging\windows\gitowl.iss
+      - name: Sign Windows installer
+        if: runner.os == 'Windows' && env.WINDOWS_CERT_PFX != ''
+        shell: pwsh
+        env:
+          WINDOWS_CERT_PFX: ${{ secrets.WINDOWS_CERT_PFX }}
+          WINDOWS_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
+        run: |
+          $signtool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin\*\x64\signtool.exe" | Select-Object -Last 1
+          Get-ChildItem dist\*.exe | ForEach-Object { & $signtool.FullName sign /f "$env:RUNNER_TEMP\cert.pfx" /p $env:WINDOWS_CERT_PASSWORD /fd sha256 /tr http://timestamp.digicert.com /td sha256 $_.FullName }
+
+      # macOS: an .app bundle in a .dmg, optionally signed with a Developer ID and notarized.
+      - name: Build macOS app and disk image
+        if: runner.os == 'macOS'
+        env:
+          MACOS_CERT_P12: ${{ secrets.MACOS_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: |
+          app=bundle/gitowl.app
+          mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" dist
+          cp LICENSE-MIT LICENSE-APACHE bundle/
+          ln -s /Applications bundle/Applications
+          cp target/release/gitowl "$app/Contents/MacOS/"
+          cp assets/brand/gitowl.icns "$app/Contents/Resources/"
+          sed "s/__VERSION__/${VERSION#v}/g" packaging/macos/Info.plist > "$app/Contents/Info.plist"
+          if [ -n "$MACOS_CERT_P12" ]; then
+            echo "$MACOS_CERT_P12" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+            security create-keychain -p ci build.keychain
+            security default-keychain -s build.keychain
+            security unlock-keychain -p ci build.keychain
+            security import "$RUNNER_TEMP/cert.p12" -k build.keychain -P "$MACOS_CERT_PASSWORD" -T /usr/bin/codesign
+            security set-key-partition-list -S apple-tool:,apple: -s -k ci build.keychain
+            codesign --force --options runtime --timestamp -s "$MACOS_SIGN_IDENTITY" "$app"
+          fi
+          hdiutil create -volname gitowl -srcfolder bundle -ov -format UDZO "dist/gitowl-$VERSION-macos.dmg"
+          if [ -n "$MACOS_CERT_P12" ] && [ -n "$APPLE_ID" ]; then
+            xcrun notarytool submit "dist/gitowl-$VERSION-macos.dmg" --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD" --wait
+            xcrun stapler staple "dist/gitowl-$VERSION-macos.dmg"
+          fi
+
+      # Linux: a .deb package.
+      - name: Build Debian package
+        if: runner.os == 'Linux'
+        run: |
+          cargo install cargo-deb --locked
+          cargo deb --no-build --output dist/
+
+      - name: Archive and checksum
+        shell: bash
+        run: |
+          mkdir -p dist
+          name="gitowl-${VERSION}-${{ matrix.target }}"
+          mkdir "$name"
+          cp target/release/gitowl${{ runner.os == 'Windows' && '.exe' || '' }} README.md LICENSE-MIT LICENSE-APACHE "$name/"
+          if [ "$RUNNER_OS" = "Windows" ]; then 7z a "dist/$name.zip" "$name" > /dev/null; else tar czf "dist/$name.tar.gz" "$name"; fi
+          cd dist
+          for f in *; do sha256sum "$f" > "$f.sha256" 2>/dev/null || shasum -a 256 "$f" > "$f.sha256"; done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      # Draft only: a maintainer reviews the notes and publishes.
+      - run: gh release create "$GITHUB_REF_NAME" * --verify-tag --draft --generate-notes --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ github.token }}

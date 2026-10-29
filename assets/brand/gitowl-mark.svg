@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>gitowl mark — Commit Eyes owl</title>
+  <!-- Head with ear tufts; the eyes are commit nodes (white ring, navy core): it sees every change. -->
+  <path d="M50 98 L62 36 L106 74 Q128 66 150 74 L194 36 L206 98 Q216 120 216 142 Q216 226 128 226 Q40 226 40 142 Q40 120 50 98 Z" fill="#0071E3"/>
+  <!-- Facial-disc rings (as in 02c Merge Owl · face): a lighter blue shadow framing each eye, reads as owl, not cat. -->
+  <circle cx="92" cy="134" r="44" fill="#3D9BFF"/>
+  <circle cx="164" cy="134" r="44" fill="#3D9BFF"/>
+  <circle cx="92" cy="136" r="34" fill="#FFFFFF"/>
+  <circle cx="164" cy="136" r="34" fill="#FFFFFF"/>
+  <circle cx="92" cy="136" r="16" fill="#0A2A66"/>
+  <circle cx="164" cy="136" r="16" fill="#0A2A66"/>
+  <path d="M116 170 H140 L128 190.78 Z" fill="#5AC8FA"/>
+</svg>

@@ -1,0 +1,7 @@
+services:
+  checks:
+    build:
+      context: .
+      target: check
+    # No host repositories or credentials are mounted into the test container.
+    command: cargo test --locked --no-default-features

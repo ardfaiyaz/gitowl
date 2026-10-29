@@ -1,0 +1,70 @@
+name: Bug report
+description: Something in gitowl doesn't work as expected
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please search [existing issues](https://github.com/ardfaiyaz/gitowl/issues) first.
+        **Security problems:** don't file them here — see [SECURITY.md](https://github.com/ardfaiyaz/gitowl/blob/main/SECURITY.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a repository with …
+        2. Go to Changes and …
+        3. Click …
+    validations:
+      required: true
+  - type: textarea
+    id: error
+    attributes:
+      label: Error message or Git output
+      description: Copy the text from gitowl's error banner, if any. Remove anything private.
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: gitowl version
+      description: Run `gitowl --version`.
+      placeholder: gitowl 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS (Apple silicon)
+        - macOS (Intel)
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version / Linux distribution
+      placeholder: e.g. 24H2, macOS 15.2, Ubuntu 24.04
+  - type: input
+    id: tools
+    attributes:
+      label: Git and GitHub CLI versions
+      description: Run `git --version` and `gh --version` (if you use the GitHub features).
+      placeholder: git version 2.47.0, gh version 2.62.0
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag images here. Make sure they don't show private code or credentials.

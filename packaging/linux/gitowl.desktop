@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=gitowl
+Comment=Your local Git and GitHub workspace
+Exec=gitowl --library
+Icon=gitowl
+Terminal=false
+Categories=Development;RevisionControl;

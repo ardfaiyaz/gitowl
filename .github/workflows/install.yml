@@ -1,0 +1,35 @@
+name: Linux installation prerequisites
+on:
+  push:
+    paths: ['README.md', '.github/workflows/install.yml']
+  pull_request:
+    paths: ['README.md', '.github/workflows/install.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: install-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: fedora:latest
+            install: dnf install -y gcc gcc-c++ curl git pkgconf-pkg-config gtk3-devel webkit2gtk4.1-devel libxdo-devel dbus-devel
+          - image: archlinux:base
+            install: pacman -Syu --needed --noconfirm base-devel curl git pkgconf gtk3 webkit2gtk-4.1 xdotool dbus
+    container: ${{ matrix.image }}
+    steps:
+      - name: Install the documented packages
+        run: ${{ matrix.install }}
+      - name: Check headers and native linking
+        shell: bash
+        run: |
+          pkg-config --modversion gtk+-3.0 webkit2gtk-4.1 dbus-1
+          printf '#include <gtk/gtk.h>\n#include <webkit2/webkit2.h>\n#include <xdo.h>\n#include <dbus/dbus.h>\nint main(void) { return 0; }\n' |
+            cc -x c -o /tmp/gitowl-prereqs - $(pkg-config --cflags --libs gtk+-3.0 webkit2gtk-4.1 dbus-1) -lxdo
+          /tmp/gitowl-prereqs

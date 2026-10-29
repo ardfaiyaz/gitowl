@@ -1,0 +1,2368 @@
+/*
+ * Screen styles: Changes, History, diff, sheets, rewrite plan and GitHub review.
+ * Loaded after App.css (imported by components/Dialog.tsx), so equal-specificity rules here win.
+ * Motion uses only transform/opacity with the shell's iOS curve; reduced motion turns it off below.
+ */
+
+/* ---------- Shared: grouped lists, stagger, skeletons ---------- */
+.group-label {
+  margin: 14px 0 8px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--label-2);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.group-footnote {
+  margin: 8px 0 0;
+  padding: 0 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--label-2);
+}
+.grouped-list,
+.github-group,
+.rebase-plan.grouped {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--surface);
+  border: var(--hairline) solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+.grouped-list > li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 16px;
+  font-size: 15px;
+  color: var(--label);
+}
+.grouped-list code {
+  font-size: 12px;
+  color: var(--label-2);
+}
+/* Inset hairlines: separators start where the row text starts, like iOS grouped lists. */
+.grouped-list > li + li::before,
+.github-group > .github-row + .github-row::before,
+.rebase-plan.grouped > li + li::before,
+.file-list > .file-row + .file-row::before,
+.commit-list > .commit-row + .commit-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 16px;
+  height: var(--hairline);
+  background: var(--separator);
+  pointer-events: none;
+}
+
+/* Rows enter with a short rise; --i (0–8) staggers them 30ms apart. */
+.stagger > *,
+.file-list > .file-row,
+.commit-list > .commit-row {
+  animation: row-in var(--dur-med, 320ms) var(--ease-ios, cubic-bezier(0.32, 0.72, 0, 1)) both;
+  animation-delay: calc(var(--i, 0) * 30ms);
+}
+:is(.stagger, .file-list, .commit-list) > :nth-child(2) { --i: 1; }
+:is(.stagger, .file-list, .commit-list) > :nth-child(3) { --i: 2; }
+:is(.stagger, .file-list, .commit-list) > :nth-child(4) { --i: 3; }
+:is(.stagger, .file-list, .commit-list) > :nth-child(5) { --i: 4; }
+:is(.stagger, .file-list, .commit-list) > :nth-child(6) { --i: 5; }
+:is(.stagger, .file-list, .commit-list) > :nth-child(7) { --i: 6; }
+:is(.stagger, .file-list, .commit-list) > :nth-child(8) { --i: 7; }
+:is(.stagger, .file-list, .commit-list) > :nth-child(n + 9) { --i: 8; }
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0;
+}
+.skeleton-row {
+  height: 52px;
+  border-radius: 14px;
+}
+.skeleton-row:nth-child(odd) {
+  width: 86%;
+}
+
+/* ---------- Sheets (every Dialog) ---------- */
+.modal.sheet {
+  padding: 14px 20px 22px;
+  background: var(--bg);
+  border-radius: 20px;
+}
+.modal.sheet[open] {
+  animation: sheet-in var(--dur-med, 320ms) var(--ease-ios, cubic-bezier(0.32, 0.72, 0, 1)) both;
+}
+.modal.sheet::backdrop {
+  background: var(--backdrop, rgba(0, 0, 0, 0.25));
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: fade-in var(--dur-med, 320ms) var(--ease-ios, cubic-bezier(0.32, 0.72, 0, 1)) both;
+}
+/* Exit copies made by Dialog: drawn where the real dialog was, and never interactive. */
+.modal.dialog-exit[open] {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  pointer-events: none;
+  animation: none;
+}
+.dialog-exit-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  background: var(--backdrop, rgba(0, 0, 0, 0.25));
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+}
+.sheet .section-heading {
+  top: -14px;
+  background: var(--bg);
+}
+/* iOS sheet bar: Cancel · centred title · filled action. */
+.sheet-bar {
+  position: sticky;
+  top: -14px;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 10px;
+  background: var(--bg);
+}
+.sheet-bar h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  text-align: center;
+}
+.sheet-bar > :first-child {
+  justify-self: start;
+}
+.sheet-bar > :last-child {
+  justify-self: end;
+}
+.sheet-text-button {
+  padding: 0 4px;
+  background: transparent;
+  color: var(--accent-text);
+  font-size: 17px;
+  font-weight: 400;
+}
+.sheet-text-button:hover {
+  background: transparent;
+  text-decoration: underline;
+}
+
+/* ---------- iOS switch on a real checkbox ---------- */
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 52px;
+  margin: 10px 0 0;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: var(--hairline) solid var(--card-border);
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 51px;
+  height: 31px;
+  min-height: 31px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--fill-strong);
+  cursor: pointer;
+  transition: background-color var(--dur-fast, 160ms) ease-out;
+}
+.switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 3px 1px rgba(0, 0, 0, 0.06);
+  transition: transform var(--dur-med, 320ms) var(--ease-ios, cubic-bezier(0.32, 0.72, 0, 1));
+}
+/* Off state needs a 3:1 boundary; the grey fill alone is too faint on white. */
+.switch:not(:checked) {
+  box-shadow: inset 0 0 0 1px var(--label-2);
+}
+.switch:checked {
+  background: var(--green-dot);
+}
+.switch:checked::before {
+  transform: translateX(20px);
+}
+.switch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Segmented controls (board .seg): capsule track, white thumb that slides ----------
+   Segmented.tsx sets --n (options) and --sel (chosen index) inline. */
+.segmented {
+  --n: 2;
+  --sel: 0;
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  width: fit-content;
+  max-width: 100%;
+  padding: 2px;
+  background: var(--field);
+  border-radius: 999px;
+}
+.segmented::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc((100% - 4px) / var(--n));
+  border-radius: 999px;
+  background: var(--thumb);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  transform: translateX(calc(100% * var(--sel)));
+  transition: transform var(--dur-med, 320ms) var(--ease-ios, cubic-bezier(0.32, 0.72, 0, 1));
+}
+.segmented button,
+.segmented button:hover,
+.segmented button[aria-pressed="true"] {
+  min-height: 32px;
+  padding: 0 14px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--label);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.segmented button[aria-pressed="true"] {
+  font-weight: 600;
+}
+.segmented button:not([aria-pressed="true"]):hover {
+  color: var(--accent-text);
+}
+
+/* ---------- Changes ---------- */
+.changes-layout,
+.history-layout {
+  gap: 18px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+.file-panel {
+  gap: 8px;
+  background: transparent;
+  border-right: 0;
+}
+.file-panel > .panel-heading {
+  height: auto;
+  min-height: 0;
+  padding: 0 16px;
+  background: transparent;
+  border-bottom: 0;
+}
+.file-panel > .panel-heading strong {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--label-2);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.file-panel > .panel-help {
+  padding: 0 16px;
+  font-size: 13px;
+}
+.file-toolbar {
+  flex-wrap: wrap;
+  padding: 0 4px;
+  border-bottom: 0;
+}
+.file-toolbar button {
+  min-height: 32px;
+  padding: 0 14px;
+  font-weight: 600;
+}
+.file-list {
+  min-height: 120px;
+  padding-bottom: 0;
+  background: var(--surface);
+  border: var(--hairline) solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+}
+.file-row {
+  position: relative;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 12px 0 16px;
+  border-left: 0;
+  transition: background-color var(--dur-fast, 160ms) ease-out;
+}
+.file-row:hover {
+  background: var(--hover);
+}
+.file-row.selected {
+  background: var(--accent-tint);
+}
+.file-list > .file-row + .file-row::before {
+  left: 82px;
+}
+.file-row input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+}
+.file-row button,
+.file-row button:hover {
+  gap: 12px;
+  padding: 8px 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 15px;
+}
+.status-letter {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--orange-tint);
+  color: var(--orange);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+}
+.status-letter[data-code="A"] {
+  background: var(--green-tint);
+  color: var(--green);
+}
+.status-letter:is([data-code="D"], [data-code="!"]) {
+  background: var(--red-tint);
+  color: var(--red);
+}
+.file-row small {
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.file-row button.row-discard {
+  min-height: 28px;
+  padding: 0 10px;
+  background: var(--fill);
+  font-size: 12px;
+  font-weight: 600;
+}
+.commit-form {
+  padding: 14px 16px;
+  background: var(--surface);
+  border: var(--hairline) solid var(--card-border);
+  border-top: var(--hairline) solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+}
+.commit-form label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--label-2);
+}
+.commit-form textarea {
+  height: 78px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  font-size: 15px;
+}
+.commit-summary {
+  margin: 10px 0;
+  font-size: 13px;
+}
+.commit-form .primary.full {
+  min-height: 50px;
+  border-radius: 999px;
+  font-size: 17px;
+}
+.commit-form .hint {
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+/* ---------- Diff ---------- */
+.diff-panel {
+  gap: 8px;
+  background: transparent;
+}
+.diff-panel > .panel-heading,
+.diff-toolbar {
+  height: auto;
+  min-height: 36px;
+  padding: 0 4px;
+  background: transparent;
+  border-bottom: 0;
+  flex-wrap: wrap;
+}
+/* Monospace only when the title is a path or hash, never for the placeholder titles. */
+.diff-panel > .panel-heading strong {
+  font-size: 14px;
+}
+.diff-panel > .panel-heading strong code {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: inherit;
+}
+.diff-panel > .panel-heading select {
+  border-radius: 999px;
+}
+.diff-toolbar button {
+  min-height: 32px;
+  margin-left: 6px;
+  padding: 0 14px;
+  font-weight: 600;
+}
+.diff-mode {
+  align-self: flex-end;
+  margin: 0 4px;
+}
+.diff,
+.diff-panel > .empty {
+  flex: 1;
+  min-height: 0;
+  background: var(--surface);
+  border: var(--hairline) solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+}
+.diff {
+  padding: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 2;
+}
+.line-no,
+.diff-line .line-no + .line-no {
+  width: 40px;
+  margin: 0;
+  padding-right: 8px;
+  border-right: 0;
+  color: var(--label-2);
+  font-size: 12px;
+}
+.diff-line code {
+  padding-left: 10px;
+  padding-right: 16px;
+}
+.line-pick {
+  width: 36px;
+  align-items: center;
+}
+/* Selected lines keep their add/remove colour under a blue wash; the checkbox carries the state. */
+.diff-line.picked {
+  background-image: linear-gradient(var(--accent-tint), var(--accent-tint));
+}
+/* The hunk header pins to the top of the diff while its lines scroll beneath it. */
+.diff-line.hunk {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  align-items: center;
+  min-height: 48px;
+  padding: 0;
+  background: var(--surface-2);
+  color: var(--label-2);
+  box-shadow: inset 0 calc(var(--hairline) * -1) 0 var(--separator);
+}
+.hunk-actions {
+  position: sticky;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  padding-left: 16px;
+}
+.hunk-action {
+  position: static;
+  min-height: 32px;
+  padding: 0 14px;
+  background: var(--fill);
+  box-shadow: none;
+  color: var(--accent-text);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hunk-action.primary {
+  background: var(--accent-fill);
+  color: var(--on-accent);
+}
+.github-diff {
+  gap: 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+
+/* ---------- Sheet forms: label column + borderless fields inside a grouped card ---------- */
+.form-rows > li {
+  min-height: 46px;
+  padding: 4px 16px;
+}
+.form-rows label:first-child,
+.form-rows .form-label {
+  flex-shrink: 0;
+  width: 110px;
+  font-size: 15px;
+}
+.form-rows input:not([type="checkbox"]):not([type="radio"]),
+.form-rows select {
+  flex: 1;
+  min-width: 0;
+  padding-left: 0;
+  background-color: transparent;
+  font-size: 15px;
+}
+.form-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+.sheet-note {
+  margin: 10px 4px 0;
+  color: var(--label-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.sheet-note code {
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Actions: job logs ---------- */
+.job-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.job-head .link-button {
+  font-size: 13px;
+  text-transform: none;
+}
+.form-rows .required {
+  color: var(--red);
+  font-size: 12px;
+}
+.job-log {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 14px;
+}
+.job-log-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.job-log-search input {
+  flex: 1;
+}
+/* Logs read as a terminal in both themes. */
+.log-view {
+  max-height: 520px;
+  overflow: auto;
+  padding: 6px 0;
+  border-radius: 14px;
+  background: #11151c;
+  color: #d6dbe4;
+  font: 12.5px/1.75 var(--font-mono);
+}
+.log-view .log-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 14px;
+  border-radius: 0;
+  background: transparent;
+  color: #d6dbe4;
+  font: inherit;
+  text-align: left;
+}
+.log-view .log-group:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.log-group svg {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.log-group[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+.log-group span {
+  margin-left: auto;
+  color: #7d8696;
+}
+.log-line {
+  display: flex;
+  padding: 0 14px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.log-line.err {
+  background: rgba(255, 69, 58, 0.14);
+  color: #ffb4ad;
+}
+.log-no {
+  flex-shrink: 0;
+  width: 44px;
+  padding-right: 12px;
+  color: #6b7383;
+  text-align: right;
+  user-select: none;
+}
+
+/* ---------- History ---------- */
+.filters {
+  flex-wrap: wrap;
+  align-items: center;
+}
+/* The date filter reads as one field: a visible "Since" label with the native picker inside. */
+.date-filter {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  border-radius: 10px;
+  background: var(--field);
+  color: var(--label-2);
+  font-size: 15px;
+}
+.date-filter input[type="date"] {
+  flex: 1;
+  min-width: 0;
+  padding-left: 0;
+  background: transparent;
+  color: var(--label);
+}
+.filters input {
+  min-height: 36px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 15px;
+}
+.commit-list {
+  background: var(--surface);
+  border: var(--hairline) solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+}
+.commit-row {
+  position: relative;
+  padding: 12px 16px;
+  border-bottom: 0;
+  transition: background-color var(--dur-fast, 160ms) ease-out;
+}
+.commit-list > .commit-row + .commit-row::before {
+  left: 40px;
+}
+/* Timeline: a ring per commit, joined by a line to the next row's ring. */
+.commit-node {
+  position: relative;
+  z-index: 2;
+  width: 12px;
+  height: 12px;
+  margin-top: 4px;
+  border: 3px solid var(--label-3);
+  background: var(--surface);
+  transition: border-color var(--dur-fast, 160ms) ease-out;
+}
+.commit-row::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 30px;
+  bottom: -14px;
+  left: 21px;
+  width: 2px;
+  background: var(--fill-strong);
+}
+.commit-row:not(:has(+ .commit-row))::after {
+  display: none;
+}
+.commit-row.selected .commit-node {
+  border-color: var(--accent);
+}
+.commit-row strong {
+  font-size: 15px;
+  font-weight: 500;
+}
+.commit-row p {
+  margin: 2px 0;
+  font-size: 13px;
+}
+
+/* ---------- Rewrite history plan ---------- */
+.rebase-plan.grouped {
+  display: block;
+}
+.rebase-plan.grouped > li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  margin: 0;
+  padding: 6px 12px 6px 16px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+.rebase-plan.grouped > li + li::before {
+  left: 42px;
+}
+.drag-glyph {
+  flex-shrink: 0;
+  fill: var(--label-3);
+}
+.plan-message {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.plan-message > span {
+  overflow: hidden;
+  font-size: 15px;
+  color: var(--label);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.plan-message code {
+  font-size: 12px;
+  color: var(--label-2);
+}
+.plan-action {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  min-height: 28px;
+  padding: 3px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+.plan-move {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+.plan-move button {
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+}
+.rebase-plan.grouped > li:is(.plan-squash, .plan-fixup) {
+  margin-left: 0;
+  padding-left: 44px;
+}
+:is(.plan-squash, .plan-fixup) .plan-action {
+  background: var(--purple-tint);
+  color: var(--purple);
+}
+.plan-drop .plan-action {
+  background: var(--red-tint);
+  color: var(--red);
+}
+.rebase-plan li.plan-drop .plan-message > span {
+  color: var(--label-2);
+  text-decoration: line-through;
+}
+.warning-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: var(--hairline) solid var(--card-border);
+  border-radius: 20px;
+}
+.warning-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #ff9500;
+  color: #ffffff;
+}
+.modal .warning-card p {
+  margin: 0;
+  color: var(--label);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.warning-card p span {
+  color: var(--label-2);
+}
+
+/* ---------- GitHub ---------- */
+.github-connect > button {
+  align-self: flex-start;
+}
+.github-workspace {
+  gap: 16px;
+}
+.github-layout {
+  gap: 18px;
+}
+.github-tabs.small {
+  margin: 0;
+}
+.github-group {
+  flex-shrink: 0;
+}
+.github-group > .github-row,
+.github-group > .github-row:hover,
+.github-group > .github-row.selected {
+  position: relative;
+  width: 100%;
+  gap: 4px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transition: background-color var(--dur-fast, 160ms) ease-out;
+}
+.github-group > .github-row {
+  background: transparent;
+}
+.github-group > .github-row:hover {
+  background: var(--hover);
+}
+.github-group > .github-row.selected {
+  background: var(--accent-tint);
+}
+.github-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.github-row-top small {
+  font-variant-numeric: tabular-nums;
+}
+.github-row strong {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.pill {
+  margin-right: 0;
+  font-size: 12px;
+}
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+.gh-card {
+  background: var(--surface);
+  border: var(--hairline) solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+}
+.github-article {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.github-detail-head {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  animation: row-in var(--dur-med, 320ms) var(--ease-ios, cubic-bezier(0.32, 0.72, 0, 1)) both;
+}
+.github-detail-head h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+.github-detail-head > p {
+  margin: 0;
+}
+.github-detail-head code {
+  color: var(--label);
+}
+.merge-controls {
+  align-items: center;
+  margin-top: 4px;
+}
+.merge-controls button {
+  min-height: 40px;
+  padding: 0 16px;
+  font-weight: 600;
+}
+.merge-controls .primary {
+  min-height: 44px;
+  padding: 0 22px;
+  font-size: 17px;
+}
+.capsule-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  margin: 0;
+  padding: 0 6px 0 14px;
+  background: var(--field);
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 400;
+}
+.capsule-select select {
+  min-height: 36px;
+  padding-block: 0;
+  padding-left: 6px;
+  background-color: transparent;
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.github-body {
+  margin: 0;
+  padding: 16px;
+  border-radius: 20px;
+}
+.grouped-list.checks > li + li::before {
+  left: 52px;
+}
+.check-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.grouped-list.checks small {
+  color: var(--label-2);
+  font-size: 13px;
+  text-transform: capitalize;
+}
+.outcome-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+.outcome-success {
+  background: var(--green-dot);
+}
+.outcome-failure {
+  background: #ff3b30;
+}
+.outcome-pending {
+  background: #ff9500;
+}
+.outcome-neutral {
+  background: #8e8e93;
+}
+.job-group {
+  display: flex;
+  flex-direction: column;
+}
+.job-group .group-label {
+  margin-top: 0;
+}
+
+/* Conversation: grey bubbles left for others, accent bubbles right for you. */
+.chat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.chat:empty {
+  display: none;
+}
+.chat-item {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.chat.stagger > .chat-item {
+  animation-name: bubble-in;
+  transform-origin: bottom left;
+}
+.chat.stagger > .chat-item.mine {
+  justify-content: flex-end;
+  transform-origin: bottom right;
+}
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+.chat-avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--fill-strong);
+  color: var(--label);
+  font-size: 12px;
+  font-weight: 600;
+}
+.chat-bubble {
+  max-width: 80%;
+  min-width: 0;
+  padding: 10px 14px;
+  border-radius: 18px 18px 18px 6px;
+  background: var(--fill);
+  color: var(--label);
+}
+.mine .chat-bubble {
+  border-radius: 18px 18px 6px 18px;
+  background: var(--accent-fill);
+  color: var(--on-accent);
+}
+.chat-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--label-2);
+}
+.chat-meta strong {
+  color: var(--label);
+  font-weight: 600;
+}
+.chat-meta small {
+  font-size: 12px;
+}
+.mine .chat-meta,
+.mine .chat-meta strong,
+.mine .chat-meta small {
+  color: var(--on-accent);
+}
+.chat-bubble pre {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.4;
+}
+.composer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+.composer textarea {
+  flex: 1 1 220px;
+  min-width: 0;
+  min-height: 40px;
+  max-height: 160px;
+  padding: 9px 16px;
+  border: var(--hairline) solid var(--separator);
+  border-radius: 20px;
+  background: var(--surface);
+  font-size: 15px;
+  resize: none;
+  field-sizing: content;
+}
+.composer select {
+  min-height: 40px;
+  border-radius: 999px;
+}
+.send-button {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* ---------- Narrow windows ---------- */
+@media (max-width: 760px) {
+  .file-list {
+    flex: 0 1 auto;
+  }
+}
+/* Long tab labels: fall back to wrapping capsules without the sliding thumb. */
+@media (max-width: 560px) {
+  .segmented {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .segmented::before {
+    display: none;
+  }
+  .segmented button[aria-pressed="true"] {
+    background: var(--thumb);
+    box-shadow: var(--shadow-raised);
+  }
+}
+
+/* ---------- Reduced motion: no movement, state changes are instant ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .stagger > *,
+  .file-list > .file-row,
+  .commit-list > .commit-row,
+  .modal.sheet[open],
+  .modal.sheet::backdrop,
+  .chat.stagger > .chat-item,
+  .github-detail-head {
+    animation: none;
+  }
+  .switch::before,
+  .segmented::before {
+    transition: none;
+  }
+}
+
+/* PR review: inline line-comment composer and the list of existing review comments */
+.diff-comment {
+  padding: 8px 12px;
+  border-block: var(--hairline) solid var(--separator);
+  background: var(--surface);
+  font-family: var(--font-sans);
+}
+.diff-comment textarea {
+  font: 13px/1.5 var(--font-mono);
+}
+
+/* ---------- Diff options, find, blame and reflog (Phase 6) ---------- */
+.diff-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 14px;
+  font-size: 13px;
+}
+.diff-options .diff-mode {
+  margin: 0;
+}
+.diff-options > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+}
+.diff-find {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.diff-find input {
+  flex: 0 1 320px;
+  min-height: 36px;
+  border-radius: 999px;
+}
+.diff-paused {
+  margin: 0 4px;
+}
+.diff.wrap .diff-line {
+  min-width: 0;
+}
+.diff.wrap .diff-line code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+mark.find-hit {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: inherit;
+  border-radius: 3px;
+}
+mark.find-hit.current {
+  background: var(--accent);
+  color: #fff;
+}
+.diff-expand {
+  display: block;
+  width: calc(100% - 16px);
+  min-height: 0;
+  margin: 4px 8px;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  color: var(--label-2);
+  font: 12.5px/2 var(--font-mono);
+  text-align: center;
+}
+.diff-expand:hover {
+  background: var(--accent-tint);
+  color: var(--accent-text);
+}
+.blame-line {
+  display: grid;
+  grid-template-columns: 200px 40px minmax(0, 1fr);
+  align-items: baseline;
+}
+.blame-who {
+  min-height: 0;
+  padding: 0 10px 0 16px;
+  overflow: hidden;
+  border: 0;
+  border-right: var(--hairline) solid var(--separator);
+  border-radius: 0;
+  background: transparent;
+  color: var(--label-2);
+  font: 12px/2 var(--font-sans);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.blame-who:hover {
+  color: var(--accent-text);
+  text-decoration: underline;
+}
+.blame-line code {
+  padding-left: 12px;
+  white-space: pre;
+}
+.reflog {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+.reflog h2 {
+  margin: 0 4px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.reflog li > div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.reflog li strong {
+  font-size: 14px;
+  font-weight: 600;
+}
+.reflog li small {
+  color: var(--label-2);
+  font-size: 12.5px;
+}
+.reflog > .hint {
+  margin: 0 4px;
+}
+table.shortcuts {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+table.shortcuts td {
+  padding: 8px 0;
+  border-bottom: var(--hairline) solid var(--separator);
+}
+table.shortcuts td + td {
+  text-align: right;
+}
+.diff-options .confirmation-check {
+  align-items: center;
+  gap: 6px;
+}
+.diff-options .confirmation-check input {
+  width: 16px;
+  height: 16px;
+}
+/* History keeps room for the diff or blame; the reflog scrolls after a few rows. */
+.diff-panel > .diff {
+  min-height: 280px;
+}
+.reflog {
+  flex: none;
+}
+.reflog .grouped-list {
+  max-height: 232px;
+  overflow-y: auto;
+}
+
+/* ---------- Pull request review (board: Pull request review) ---------- */
+.pr-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.pr-head h2 {
+  flex: 1 1 320px;
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.pr-number {
+  color: var(--label-2);
+  font-weight: 500;
+}
+.pr-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+.pr-main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+@media (max-width: 1280px) {
+  .pr-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.pr-side {
+  padding: 4px 18px 18px;
+}
+.pr-side dl {
+  margin: 0;
+}
+.pr-side dt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--label-2);
+  font-size: 12.5px;
+}
+.pr-side dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  font-size: 14px;
+}
+.pr-side dd > button,
+.pr-thread-actions button,
+.pr-reply button {
+  min-height: 26px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.pr-side dd > button {
+  margin-left: auto;
+}
+.pr-side > .hint {
+  margin: 18px 0 0;
+}
+.pr-person,
+.label-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.label-chip {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--field);
+  font-size: 12px;
+  font-weight: 600;
+}
+.label-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.2);
+}
+.pr-picker {
+  margin: 8px 0 0;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--field);
+  animation: picker-in 160ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.pr-picker input[type="search"] {
+  width: 100%;
+  margin-bottom: 6px;
+}
+.pr-picker ul {
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.pr-picker label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+}
+.pr-picker label:hover {
+  background: var(--fill);
+}
+.pr-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+}
+.pr-checks h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.pr-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  font-size: 14px;
+}
+.pr-row + .pr-row {
+  padding-top: 10px;
+  border-top: var(--hairline) solid var(--separator);
+}
+.pr-row-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.pr-row small {
+  color: var(--label-2);
+  font-size: 13px;
+}
+.pr-row.switch-row {
+  padding-inline: 0;
+}
+.pr-merge {
+  flex-wrap: wrap;
+}
+.pr-merge .primary {
+  margin-left: auto;
+}
+.pr-spin {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--accent-tint);
+  border-top-color: var(--accent-text);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.pr-thread {
+  margin: 4px 12px 10px 92px;
+  overflow: hidden;
+  border: var(--hairline) solid var(--card-border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+  font-family: var(--font-sans);
+  white-space: normal;
+}
+.github-diff > .pr-thread {
+  margin-left: 0;
+}
+.pr-thread.resolved > summary {
+  padding: 10px 14px;
+  color: var(--label-2);
+  font-size: 13px;
+  cursor: pointer;
+}
+.pr-msg {
+  padding: 12px 14px 4px;
+}
+.pr-msg + .pr-msg {
+  border-top: var(--hairline) solid var(--separator);
+}
+.pr-thread > .pr-msg-meta {
+  padding: 10px 14px 0;
+}
+.pr-msg-meta {
+  margin: 0;
+  color: var(--label-2);
+  font-size: 13px;
+}
+.pr-msg-meta strong {
+  color: var(--label);
+}
+.pr-msg-text {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.pr-sug {
+  margin: 8px 0 4px;
+  overflow: hidden;
+  border: var(--hairline) solid var(--separator);
+  border-radius: 10px;
+  font: 12.5px/1.9 var(--font-mono);
+}
+.pr-sug > p {
+  margin: 0;
+  padding: 4px 10px;
+  background: var(--fill);
+  color: var(--label-2);
+  font: 12px var(--font-sans);
+}
+.pr-sug .diff-line code {
+  padding-left: 10px;
+}
+.pr-thread-actions {
+  display: flex;
+  gap: 8px;
+  padding: 8px 14px 0;
+}
+.pr-reply {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px 12px;
+}
+.pr-reply input {
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
+  font-size: 13.5px;
+}
+/* In review, Files grows with its content; the diff scrolls on its own so the Checks card stays below it. */
+.pr-review .github-diff {
+  max-height: none;
+}
+.pr-review .github-diff > .diff {
+  flex: none;
+  max-height: 70vh;
+}
+
+/* ---------- Page header and GitHub repository card (boards: Actions, Create/publish/fork) ---------- */
+.header-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.github-header {
+  align-items: flex-start;
+  padding: 16px 18px;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+}
+.github-header > div:first-child {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+.github-header h2 {
+  font-size: 17px;
+  font-weight: 700;
+}
+.github-header p {
+  margin-top: 2px;
+  color: var(--label-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.github-header .button-row button {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* ---------- Settings (board: Settings & repository admin) ---------- */
+.settings-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: 28px;
+  margin: 0 30px 30px;
+  align-items: start;
+}
+.settings-nav {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+}
+.settings-nav p {
+  padding: 14px 12px 4px;
+  color: var(--label-2);
+  font-size: 12.5px;
+}
+.settings-nav p:first-child {
+  padding-top: 0;
+}
+.settings-nav button {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--label);
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+}
+.settings-nav button:hover {
+  background: var(--hover, rgba(120, 120, 128, 0.1));
+}
+.settings-nav button[aria-current="true"] {
+  background: var(--fill);
+  font-weight: 600;
+}
+.settings-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 820px;
+  animation: settings-pane-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@keyframes settings-pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.settings-pane > section > h2 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.settings-group,
+.settings-pane .settings-card {
+  margin: 0;
+  background: var(--surface);
+  border: 0;
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+}
+.settings-pane .settings-card {
+  padding: 18px 20px;
+}
+.settings-pane .settings-card h2 {
+  font-size: 17px;
+  font-weight: 600;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+.settings-row + .settings-row {
+  border-top: var(--hairline) solid var(--separator);
+}
+.settings-row > span,
+.settings-row > label {
+  flex: 1;
+  min-width: 0;
+  font-weight: 400;
+}
+.settings-row > label {
+  flex: 0 0 120px;
+}
+.settings-row small {
+  display: block;
+  margin-top: 2px;
+  color: var(--label-2);
+  font-size: 12.5px;
+}
+.settings-row > input {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .settings-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .settings-nav {
+    position: static;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .settings-pane {
+    animation: none;
+  }
+}
+.settings-pane .settings-card {
+  align-self: stretch;
+}
+
+/* ---------- Alerts (board: Popups & Modals): one question, two equal buttons ---------- */
+.modal.alert {
+  width: min(340px, calc(100vw - 32px));
+  padding: 24px 22px 18px;
+  border-radius: 18px;
+  background: var(--popover, var(--surface));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+.modal.alert[open] {
+  animation: alert-in 260ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+.modal.alert::backdrop {
+  background: var(--backdrop, rgba(0, 0, 0, 0.28));
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: fade-in 200ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes alert-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+.alert-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+}
+.alert-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.alert-icon.destructive {
+  background: rgba(255, 59, 48, 0.12);
+  color: var(--danger, #c00013);
+}
+.alert-icon.caution {
+  background: var(--accent-tint);
+  color: var(--accent-text);
+}
+.modal.alert > h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.modal.alert p {
+  margin: 0 0 14px;
+  color: var(--label-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.modal.alert .modal-footer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+  padding: 0;
+  border: 0;
+}
+.modal.alert .modal-footer button {
+  min-height: 36px;
+  justify-content: center;
+}
+.modal.alert .destination-preview,
+.modal.alert .modal-error,
+.modal.alert .inline-warning,
+.modal.alert input {
+  text-align: left;
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal.alert[open] {
+    animation: none;
+  }
+}
+
+/* ---------- Changes board: notes, co-authors, clean, LFS, image diff ---------- */
+button.small {
+  min-height: 28px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.destructive-text {
+  color: var(--danger, #c00013);
+}
+.banner-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.note.info {
+  background: var(--info-bg, #e6f0fc);
+  box-shadow: inset 0 0 0 0.5px rgba(0, 91, 191, 0.22);
+}
+:root[data-theme="dark"] .note.info {
+  background: rgba(61, 149, 255, 0.14);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .note.info {
+    background: rgba(61, 149, 255, 0.14);
+  }
+}
+.note > span {
+  flex: 1;
+  min-width: 0;
+}
+.note > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--accent-text);
+}
+.note strong {
+  color: var(--accent-text);
+}
+.protected-note {
+  margin: 0 30px 16px;
+}
+.lfs-note {
+  margin: 0 0 4px;
+}
+.co-authors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 26px;
+  padding: 0 6px 0 10px;
+  background: var(--accent-tint);
+  color: var(--accent-text);
+  font-size: 13px;
+}
+.chip svg {
+  width: 12px;
+  height: 12px;
+}
+.co-author-add {
+  display: inline-flex;
+  flex: 1 1 220px;
+  gap: 6px;
+}
+.co-author-add input {
+  flex: 1;
+  min-width: 0;
+  min-height: 28px;
+  font-size: 13px;
+}
+.untracked-row {
+  justify-content: space-between;
+  padding: 6px 14px;
+}
+.tag-lfs {
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: rgba(137, 68, 171, 0.12);
+  color: #8944ab;
+  font-size: 11px;
+  font-weight: 600;
+}
+.alert-list {
+  max-height: 180px;
+  margin: 0 0 12px;
+  overflow-y: auto;
+  text-align: left;
+}
+.alert-list > li {
+  min-height: 36px;
+  font-size: 13px;
+}
+.alert-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+.alert-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  text-align: left;
+}
+.image-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.image-card {
+  padding: 14px;
+}
+.image-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.image-diff figure {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+.image-diff figcaption {
+  color: var(--label-2);
+  font-size: 12.5px;
+  text-align: center;
+}
+/* Checkerboard so transparent pixels read as transparent, not white. */
+.image-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 250px;
+  padding: 16px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: repeating-conic-gradient(var(--checker, #eceef2) 0 25%, var(--surface) 0 50%) 0 0 / 16px 16px;
+}
+.image-stage.layered > * {
+  grid-area: 1 / 1;
+}
+.image-shot {
+  max-width: 100%;
+  max-height: 420px;
+  object-fit: contain;
+}
+.image-shot.missing {
+  padding: 24px;
+  border-radius: 10px;
+  background: var(--fill);
+  color: var(--label-2);
+  font-size: 13px;
+}
+.swipe-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent-fill, #0071e3);
+}
+.image-slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--label-2);
+  font-size: 13px;
+}
+.image-slider input {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+/* ---------- History board: grip, drop targets, Verified ---------- */
+.commit-row[draggable="true"] {
+  cursor: grab;
+}
+.commit-grip {
+  flex: none;
+  align-self: flex-start;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  color: var(--label-3, #aeaeb2);
+}
+.commit-grip svg {
+  width: 14px;
+  height: 14px;
+}
+.commit-row.dragging {
+  opacity: 0.45;
+}
+.commit-row.drop-newer {
+  box-shadow: inset 0 2px 0 var(--accent);
+}
+.commit-row.drop-older {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+.commit-row.drop-squash {
+  background: var(--accent-tint);
+  box-shadow: inset 0 0 0 1.5px var(--accent);
+}
+.verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 6px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: rgba(30, 123, 52, 0.12);
+  color: var(--success, #1e7b34);
+  font-size: 11px;
+  font-weight: 600;
+  vertical-align: middle;
+}
+.verified svg {
+  width: 10px;
+  height: 10px;
+}
+.commit-reorder-hint {
+  padding: 10px 14px 4px;
+}
+.untracked-row > button.small {
+  flex: none;
+  background: var(--fill);
+  color: var(--accent-text);
+}
+
+/* ---------- Settings board: switches, danger zone, captions ---------- */
+.settings-row > input[type="checkbox"].switch {
+  flex: none;
+}
+.settings-row > select {
+  min-width: 220px;
+}
+.settings-row > code {
+  color: var(--label-2);
+  font-size: 13px;
+}
+.settings-row .settings-value {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-row > button {
+  flex: none;
+}
+.settings-pane .danger-title {
+  color: var(--danger, #c00013);
+}
+.settings-group.danger {
+  box-shadow: 0 0 0 1px rgba(192, 0, 19, 0.25), var(--shadow-card);
+}
+.settings-caption {
+  margin: 8px 4px 0;
+}
+.settings-error {
+  margin: 0;
+}
+.ok-pill {
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgba(30, 123, 52, 0.12);
+  color: var(--success, #1e7b34);
+  font-size: 11px;
+  font-weight: 600;
+}
+.label-list {
+  max-height: 260px;
+  margin-bottom: 12px;
+  overflow-y: auto;
+}
+.label-list > li {
+  min-height: 40px;
+}
+.label-list .label-name {
+  flex: 1;
+  font-size: 14px;
+}
+.form-rows input[type="color"] {
+  flex: none;
+  width: 40px;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.settings-row label {
+  font-weight: 400;
+}
+/* Only the first span is the growing label; later spans are values beside the controls. */
+.settings-row > span + span {
+  flex: none;
+}
+
+/* ---------- GitHub board: More cards, README, palette scope ---------- */
+.github-more {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.more-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+  animation: settings-pane-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+.more-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+}
+.more-card h2 {
+  font-size: 16px;
+  font-weight: 600;
+}
+.readme-card {
+  grid-column: span 2;
+}
+@media (max-width: 900px) {
+  .readme-card {
+    grid-column: auto;
+  }
+}
+.more-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.more-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 7px 0;
+  font-size: 13.5px;
+}
+.more-list li + li {
+  border-top: var(--hairline) solid var(--separator);
+}
+.more-main {
+  flex: 1;
+  min-width: 0;
+}
+.sev {
+  padding: 4px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.sev-high {
+  background: rgba(192, 0, 19, 0.12);
+  color: var(--danger, #c00013);
+}
+.sev-medium {
+  background: rgba(201, 52, 0, 0.12);
+  color: #c93400;
+}
+.sev-low {
+  background: var(--fill);
+  color: var(--label-2);
+}
+.markdown {
+  max-height: 520px;
+  overflow: auto;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.markdown > * + * {
+  margin-top: 10px;
+}
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  font-weight: 600;
+}
+.markdown h3 {
+  font-size: 18px;
+}
+.markdown h4 {
+  font-size: 16px;
+}
+.markdown pre {
+  padding: 10px 12px;
+  overflow-x: auto;
+  border-radius: 10px;
+  background: var(--fill);
+  font: 12.5px/1.6 var(--font-mono);
+}
+.markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+.markdown ul,
+.markdown ol {
+  padding-left: 22px;
+}
+.md-link {
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  text-decoration: underline;
+}
+.md-link-text {
+  text-decoration: underline dotted;
+}
+.palette-scope {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 0;
+}
+.palette-scope small {
+  color: var(--label-2);
+  font-size: 12px;
+}
+.markdown blockquote {
+  margin: 0;
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--separator);
+  color: var(--label-2);
+}
+.markdown hr {
+  border: 0;
+  border-top: var(--hairline) solid var(--separator);
+}
+.more-card .more-list {
+  max-height: 460px;
+  overflow-y: auto;
+}
+.md-img {
+  max-width: 100%;
+  max-height: 360px;
+  border-radius: 8px;
+  vertical-align: middle;
+}
+.md-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.md-img-missing {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--fill);
+  color: var(--label-2);
+  font-size: 12px;
+}
+.md-table {
+  overflow-x: auto;
+}
+.md-table table {
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.md-table th,
+.md-table td {
+  padding: 6px 12px;
+  border: var(--hairline) solid var(--separator);
+  text-align: left;
+  vertical-align: top;
+}
+.md-table th {
+  background: var(--fill);
+  font-weight: 600;
+}
+.md-task {
+  list-style: none;
+  margin-left: -20px;
+}
+.md-task input {
+  margin-right: 6px;
+}
+.alert-segment {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 12px;
+}
+/* Only the diff itself may shrink; headings and toolbars keep their wrapped height instead of overlapping. */
+.diff-panel > :not(.diff) {
+  flex-shrink: 0;
+}
