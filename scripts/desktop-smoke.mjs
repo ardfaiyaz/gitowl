@@ -1,6 +1,6 @@
 // Windows regression check: WebView2 must start with a write-protected executable folder.
 import assert from 'node:assert/strict'
-import { execFileSync, spawn } from 'node:child_process'
+import { execFileSync, spawn, spawnSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
 import { join, resolve, sep } from 'node:path'
 
@@ -48,14 +48,26 @@ try {
   })
   assert.ok(existsSync(join(profile, 'gitowl', 'WebView2')), 'Browser data must use the user profile')
   assert.ok(!existsSync(installed + '.WebView2'), 'Browser data must not be written beside the executable')
-  console.log('PASS: native desktop renders a repository from a write-protected installation folder')
 } finally {
   if (child && child.exitCode === null && child.pid) {
-    command('taskkill', ['/PID', String(child.pid), '/T', '/F'])
-    await exit
+    // taskkill can report failure when WebView2 children exit during tree traversal,
+    // even though it successfully terminates our host. Verify the host actually exits.
+    const killed = spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, encoding: 'utf8' })
+    let timer
+    try {
+      await Promise.race([
+        exit,
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`Desktop did not stop: ${killed.error || killed.stderr}`)), 5000)
+        }),
+      ])
+    } finally {
+      clearTimeout(timer)
+    }
   }
   if (protectedDirectory) command('icacls', [binaryDir, '/remove:d', identity])
   assert.ok(resolve(fixture).startsWith(workspace + sep))
   // WebView2 browser processes can release their profile files shortly after the host exits.
   rmSync(fixture, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 })
 }
+console.log('PASS: native desktop renders a repository from a write-protected installation folder')
