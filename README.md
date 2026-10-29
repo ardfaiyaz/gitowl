@@ -144,8 +144,15 @@ Every file has a matching `.sha256` checksum. Verify a download before installin
 shasum -a 256 -c gitowl-v0.1.0-macos.dmg.sha256
 # Linux
 sha256sum -c gitowl_0.1.0-1_amd64.deb.sha256
-# Windows (PowerShell): compare with the contents of the .sha256 file
-Get-FileHash .\gitowl-v0.1.0-x86_64-pc-windows-msvc.zip -Algorithm SHA256
+```
+
+```powershell
+# Windows: download the archive and its .sha256 file into the same folder
+$asset = 'gitowl-v0.1.0-x86_64-pc-windows-msvc.zip'
+$expected = (Get-Content "$asset.sha256").Split(' ')[0]
+if ((Get-FileHash $asset -Algorithm SHA256).Hash -ne $expected) {
+    throw 'Checksum mismatch. Download the file again before installing.'
+}
 ```
 
 Unsigned builds may show a SmartScreen ("Windows protected your PC" → **More info** → **Run anyway**) or Gatekeeper warning (right-click the app → **Open**).
@@ -171,7 +178,7 @@ Run in PowerShell (uses [winget](https://learn.microsoft.com/windows/package-man
 
 ```powershell
 # C++ build tools (MSVC + Windows SDK) required by Rust on Windows
-winget install --id Microsoft.VisualStudio.2022.BuildTools --exact --source winget --override "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+winget install --id Microsoft.VisualStudio.2022.BuildTools --exact --source winget --override "--quiet --wait --norestart --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
 
 winget install --id Rustlang.Rustup --exact --source winget        # Rust
 winget install --id OpenJS.NodeJS.LTS --exact --source winget      # Node.js + npm
@@ -187,6 +194,9 @@ Open a **new** terminal so the tools are on your PATH, then confirm:
 ```powershell
 rustc --version; cargo --version; node --version; npm --version; git --version
 ```
+
+The package IDs have been verified with `winget show`. Installation on a clean Windows
+machine has not been tested; the Windows source build is checked in CI.
 
 </details>
 
@@ -220,7 +230,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh   # Rust
 </details>
 
 <details>
-<summary><strong>Linux — Fedora / Arch</strong></summary>
+<summary><strong>Linux — Fedora / Arch</strong> (prerequisites tested in CI containers)</summary>
 
 ```sh
 # Fedora
@@ -240,6 +250,8 @@ Install a supported Node.js LTS release from [nodejs.org](https://nodejs.org/en/
 (22.13+ on 22.x, or 24+). Package names follow the official
 [Fedora](https://packages.fedoraproject.org/pkgs/webkitgtk/webkit2gtk4.1-devel/)
 and [Arch](https://archlinux.org/packages/extra/x86_64/webkit2gtk-4.1/) repositories.
+CI installs these packages and checks native headers and linking. Desktop window behavior
+on Fedora and Arch still needs testing on those systems.
 
 </details>
 
@@ -283,7 +295,8 @@ The recent-projects list and repository recovery points remain (see [Configurati
 
 gitowl uses the [GitHub CLI](https://cli.github.com) for GitHub operations. `gh` uses your
 operating system's credential store when available; otherwise it can fall back to a plaintext
-config file. Check `gh auth status` to see your authentication state.
+config file. See the [GitHub CLI authentication documentation](https://cli.github.com/manual/gh_auth_login)
+and check `gh auth status` to see your authentication state.
 
 ```sh
 gh auth login            # choose GitHub.com, HTTPS, and log in with a browser

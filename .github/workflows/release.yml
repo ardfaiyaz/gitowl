@@ -64,6 +64,8 @@ jobs:
       - run: cargo clippy --locked --all-targets -- -D warnings
       - run: cargo test --locked
       - run: cargo build --release --locked
+      - name: Smoke-test the release executable
+        run: node scripts/smoke.mjs target/release/gitowl${{ runner.os == 'Windows' && '.exe' || '' }}
 
       # Windows: optional Authenticode signing, then an Inno Setup installer that adds gitowl to PATH.
       - name: Sign Windows executable
@@ -109,6 +111,7 @@ jobs:
           cp LICENSE-MIT LICENSE-APACHE bundle/
           ln -s /Applications bundle/Applications
           cp target/release/gitowl "$app/Contents/MacOS/"
+          cp LICENSE-MIT LICENSE-APACHE "$app/Contents/Resources/"
           cp assets/brand/gitowl.icns "$app/Contents/Resources/"
           sed "s/__VERSION__/${VERSION#v}/g" packaging/macos/Info.plist > "$app/Contents/Info.plist"
           if [ -n "$MACOS_CERT_P12" ]; then

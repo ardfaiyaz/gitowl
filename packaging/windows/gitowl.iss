@@ -19,6 +19,7 @@ OutputBaseFilename=gitowl-{#AppVersion}-windows-setup
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed=x64compatible
 ChangesEnvironment=yes
 PrivilegesRequiredOverridesAllowed=dialog
 WizardStyle=modern
