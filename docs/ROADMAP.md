@@ -46,8 +46,10 @@
 - Done: recent-projects list for switching between projects without scanning.
 - Done: Windows installer, macOS .dmg, Linux .deb in the release workflow; Authenticode and Apple codesign/notarization steps that run when signing secrets are configured.
 - Done: on-demand update check against the latest GitHub release.
+- Done: [v0.1.0](https://github.com/ardfaiyaz/gitowl/releases/tag/v0.1.0), the first public alpha release, published October 29, 2026. Windows, macOS and Linux builds and production smoke tests passed; release download checksums and archive licenses were verified.
+- Done: Fedora and Arch prerequisite installation and native-header/link checks in CI containers; Windows winget package IDs verified against the catalog.
 - Done: keyboard and accessible-name pass (automated); every visible control is named and reachable by Tab.
-- Open: buying signing certificates, a first real tagged release run, a screen-reader (NVDA/VoiceOver) session with a person.
+- Open: buying signing certificates, clean-machine winget installation, Fedora/Arch desktop interaction checks, and a screen-reader (NVDA/VoiceOver) session with a person.
 
 ## Phase E — Review depth and design parity (implemented)
 - Pull request review: details sidebar (reviewers, assignees, labels, milestone), inline review threads with suggestions, Apply suggestion, Resolve and Reply, auto-merge, update branch, convert to draft, live checks.

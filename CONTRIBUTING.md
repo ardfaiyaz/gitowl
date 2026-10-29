@@ -109,6 +109,10 @@ cargo build --locked
 node scripts/smoke.mjs                 # end-to-end HTTP checks against the debug build
 ```
 
+CI also runs the smoke script with `--outside` to check the welcome-screen startup path.
+The separate `install.yml` workflow installs the documented Fedora/Arch packages and checks
+native headers and linking in containers when the installation instructions change.
+
 Optional:
 
 ```sh
