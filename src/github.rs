@@ -71,6 +71,141 @@ fn config_name(v: &Value) -> Result<&str> {
 fn gh_json(path: &Path, args: &[&str]) -> Result<Value> {
     serde_json::from_str(&gh(path, args)?).map_err(|e| format!("Unexpected GitHub CLI output: {e}"))
 }
+
+type SettingsRequest = (&'static str, &'static str, Option<&'static str>);
+
+// Only these read-only endpoints are available to the settings viewer. Projections
+// deliberately exclude webhook configurations, key material and other unused fields.
+fn repository_settings_requests(section: &str) -> Result<&'static [SettingsRequest]> {
+    match section {
+        "general" | "secrets" | "more" => Ok(&[]),
+        "access" => Ok(&[
+            (
+                "collaborators",
+                "repos/{owner}/{repo}/collaborators?per_page=100",
+                Some(""),
+            ),
+            ("teams", "repos/{owner}/{repo}/teams?per_page=100", Some("")),
+        ]),
+        "branches" => Ok(&[
+            (
+                "branches",
+                "repos/{owner}/{repo}/branches?per_page=100",
+                Some(""),
+            ),
+            (
+                "rulesets",
+                "repos/{owner}/{repo}/rulesets?per_page=100",
+                Some(""),
+            ),
+        ]),
+        "actions" => Ok(&[
+            ("actions", "repos/{owner}/{repo}/actions/permissions", None),
+            (
+                "workflow",
+                "repos/{owner}/{repo}/actions/permissions/workflow",
+                None,
+            ),
+            (
+                "runners",
+                "repos/{owner}/{repo}/actions/runners?per_page=100",
+                Some("runners"),
+            ),
+        ]),
+        "environments" => Ok(&[(
+            "environments",
+            "repos/{owner}/{repo}/environments?per_page=100",
+            Some("environments"),
+        )]),
+        "security" => Ok(&[(
+            "reporting",
+            "repos/{owner}/{repo}/private-vulnerability-reporting",
+            None,
+        )]),
+        "webhooks" => Ok(&[(
+            "webhooks",
+            "repos/{owner}/{repo}/hooks?per_page=100",
+            Some(""),
+        )]),
+        "keys" => Ok(&[("keys", "repos/{owner}/{repo}/keys?per_page=100", Some(""))]),
+        "pages" => Ok(&[("pages", "repos/{owner}/{repo}/pages", None)]),
+        _ => Err("Choose a repository settings section.".into()),
+    }
+}
+
+fn settings_list(key: &str, field: &str, pages: Value) -> Result<Value> {
+    let fields: &[&str] = match key {
+        "collaborators" => &["id", "login", "role_name", "permissions"],
+        "teams" => &["id", "name", "slug", "permission"],
+        "branches" => &["name", "protected"],
+        "rulesets" => &[
+            "id",
+            "name",
+            "target",
+            "enforcement",
+            "source",
+            "source_type",
+        ],
+        "runners" => &["id", "name", "os", "status", "busy"],
+        "environments" => &["id", "name", "protection_rules", "deployment_branch_policy"],
+        "webhooks" => &["id", "name", "active", "events"],
+        "keys" => &[
+            "id",
+            "title",
+            "read_only",
+            "verified",
+            "created_at",
+            "enabled",
+        ],
+        _ => return Err("Unknown settings list.".into()),
+    };
+    let invalid = || "GitHub returned an unexpected settings list.".to_owned();
+    let mut result = Vec::new();
+    for page in pages.as_array().ok_or_else(invalid)? {
+        let list = if field.is_empty() { page } else { &page[field] };
+        for item in list.as_array().ok_or_else(invalid)? {
+            let item = item.as_object().ok_or_else(invalid)?;
+            let projected = fields
+                .iter()
+                .filter_map(|key| {
+                    item.get(*key)
+                        .map(|value| ((*key).to_owned(), value.clone()))
+                })
+                .collect::<serde_json::Map<_, _>>();
+            result.push(Value::Object(projected));
+        }
+    }
+    Ok(Value::Array(result))
+}
+
+fn repository_settings(
+    section: &str,
+    mut fetch: impl FnMut(&[&str]) -> Result<Value>,
+) -> Result<Value> {
+    let requests = repository_settings_requests(section)?;
+    let repository = fetch(&["api", "repos/{owner}/{repo}"])?;
+    let mut values = serde_json::Map::new();
+    let mut errors = serde_json::Map::new();
+    for &(key, endpoint, list_field) in requests {
+        let mut args = vec!["api", endpoint];
+        if list_field.is_some() {
+            args.extend(["--paginate", "--slurp"]);
+        }
+        let result = fetch(&args).and_then(|value| match list_field {
+            Some(field) => settings_list(key, field, value),
+            None => Ok(value),
+        });
+        match result {
+            Ok(value) => {
+                values.insert(key.into(), value);
+            }
+            Err(error) => {
+                errors.insert(key.into(), json!(error));
+            }
+        }
+    }
+    Ok(json!({"repository":repository,"values":values,"errors":errors}))
+}
 fn text<'a>(v: &'a Value, key: &str) -> &'a str {
     v[key].as_str().unwrap_or("")
 }
@@ -380,7 +515,12 @@ pub fn execute(path: &Path, op: &str, request: &Value) -> Result<Value> {
                 {
                     return Err("Choose a commit first.".into());
                 }
-                args.push(format!("--commit={commit}"));
+                // A positional SHA opens /commit/<sha>; --commit selects the file tree at that SHA.
+                args.push(if file.is_empty() {
+                    commit.to_owned()
+                } else {
+                    format!("--commit={commit}")
+                });
             }
             let branch = text(r, "branch");
             if !branch.is_empty() {
@@ -564,6 +704,9 @@ pub fn execute(path: &Path, op: &str, request: &Value) -> Result<Value> {
                 format!("Deleted {kind} {name}."),
                 gh(path, &[kind, "delete", name])?,
             )
+        }
+        "gh_repository_settings" => {
+            repository_settings(text(r, "section"), |args| gh_json(path, args))
         }
         "gh_repo_info" => {
             let info = gh_json(
@@ -1511,6 +1654,120 @@ pub fn execute(path: &Path, op: &str, request: &Value) -> Result<Value> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn repository_settings_keeps_permission_errors_separate_from_empty_lists() {
+        let mut calls = Vec::new();
+        let snapshot = repository_settings("actions", |args| {
+            calls.push(args.iter().map(|value| (*value).to_owned()).collect::<Vec<_>>());
+            match args[1] {
+                "repos/{owner}/{repo}" => Ok(json!({"full_name":"example/project"})),
+                "repos/{owner}/{repo}/actions/permissions" => Err("Requires admin access (HTTP 403)".into()),
+                "repos/{owner}/{repo}/actions/permissions/workflow" => Ok(json!({"default_workflow_permissions":"read","can_approve_pull_request_reviews":false})),
+                "repos/{owner}/{repo}/actions/runners?per_page=100" => Ok(json!([{"runners":[]}])),
+                _ => panic!("Unexpected request"),
+            }
+        }).unwrap();
+        assert_eq!(snapshot["repository"]["full_name"], "example/project");
+        assert_eq!(
+            snapshot["values"]["workflow"]["can_approve_pull_request_reviews"],
+            false
+        );
+        assert_eq!(snapshot["values"]["runners"], json!([]));
+        assert!(snapshot["values"].get("actions").is_none());
+        assert_eq!(
+            snapshot["errors"]["actions"],
+            "Requires admin access (HTTP 403)"
+        );
+        assert_eq!(calls.len(), 4);
+        let runners = calls.last().unwrap();
+        assert!(runners.iter().any(|arg| arg == "--paginate"));
+        assert!(runners.iter().any(|arg| arg == "--slurp"));
+    }
+
+    #[test]
+    fn repository_settings_rejects_unknown_sections_before_contacting_github() {
+        for section in [
+            "",
+            "../hooks",
+            "general?method=DELETE",
+            "actions/permissions",
+            "--help",
+        ] {
+            let result =
+                repository_settings(section, |_| panic!("Invalid sections must not run gh"));
+            assert!(
+                result
+                    .unwrap_err()
+                    .contains("Choose a repository settings section")
+            );
+        }
+        let unavailable = repository_settings("general", |_| Err("Sign in to GitHub CLI".into()));
+        assert_eq!(unavailable.unwrap_err(), "Sign in to GitHub CLI");
+    }
+
+    #[test]
+    fn repository_settings_only_reads_allowlisted_endpoints() {
+        for section in [
+            "general",
+            "access",
+            "branches",
+            "actions",
+            "environments",
+            "secrets",
+            "security",
+            "webhooks",
+            "keys",
+            "pages",
+            "more",
+        ] {
+            repository_settings(section, |args| {
+                assert_eq!(args[0], "api");
+                assert!(args[1].starts_with("repos/{owner}/{repo}"));
+                assert!(
+                    !args
+                        .iter()
+                        .any(|arg| ["--method", "-X", "-f", "-F", "--input"].contains(arg))
+                );
+                assert!(
+                    !args.contains(&"--jq"),
+                    "--slurp cannot be combined with --jq"
+                );
+                Ok(json!({}))
+            })
+            .unwrap();
+        }
+    }
+
+    #[test]
+    fn settings_lists_merge_pages_and_strip_unneeded_sensitive_fields() {
+        let hooks = settings_list("webhooks", "", json!([
+            [{"id":1,"name":"web","active":true,"events":["push"],"config":{"secret":"hidden","url":"https://example.invalid?token=hidden"}}],
+            [{"id":2,"name":"web","active":false,"events":["issues"]}]
+        ])).unwrap();
+        assert_eq!(hooks.as_array().unwrap().len(), 2);
+        assert_eq!(hooks[0]["active"], true);
+        assert!(hooks[0].get("config").is_none());
+        assert!(!hooks.to_string().contains("hidden"));
+        let keys = settings_list(
+            "keys",
+            "",
+            json!([[{"id":1,"title":"deploy","read_only":true,"key":"unused key material"}]]),
+        )
+        .unwrap();
+        assert!(keys[0].get("key").is_none());
+        let runners = settings_list(
+            "runners",
+            "runners",
+            json!([
+                {"total_count":2,"runners":[{"id":1,"name":"one","status":"online"}]},
+                {"total_count":2,"runners":[{"id":2,"name":"two","status":"offline"}]}
+            ]),
+        )
+        .unwrap();
+        assert_eq!(runners.as_array().unwrap().len(), 2);
+        assert!(settings_list("runners", "runners", json!([{}])).is_err());
+    }
 
     #[test]
     fn reads_workflow_dispatch_inputs() {

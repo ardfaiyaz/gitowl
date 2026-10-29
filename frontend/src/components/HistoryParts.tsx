@@ -131,7 +131,7 @@ const SHORTCUTS: [string, string][] = [
   ["Command palette", "Ctrl K"],
   ["Commit staged changes", "Ctrl Enter"],
   ["Fetch", "Ctrl ⇧ F"],
-  ["Switch page", "Ctrl 1–6"],
+  ["Switch page", "Ctrl 1–7"],
   ["Toggle sidebar", "Ctrl B"],
   ["Next / previous file", "J / K"],
 ];

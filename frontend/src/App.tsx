@@ -5,7 +5,7 @@ import { api } from "./api";
 import type { FileChange, Repo } from "./types";
 import { Icon } from "./components/Icon";
 import { CommitEditDialog } from "./components/CommitEditDialog";
-import { Banner, Dialog } from "./components/Dialog";
+import { Dialog } from "./components/Dialog";
 import { BranchPanel, PublishDialog } from "./components/BranchPanel";
 import { PullDialog } from "./components/PullDialog";
 import { RemotePanel } from "./components/RemotePanel";
@@ -25,6 +25,9 @@ import { Overview } from "./components/Overview";
 import { Sidebar, type Tab, type Theme } from "./components/Sidebar";
 import { CommandPalette, type Command, type SearchResult } from "./components/CommandPalette";
 import { NewRepoDialog, PublishRepoDialog } from "./components/RepoDialogs";
+import { RepositorySettings } from "./components/RepositorySettings";
+import { WorkspaceSplash } from "./components/WorkspaceSplash";
+import { Toast } from "./components/Toast";
 
 type Commit = {
   id: string;
@@ -86,8 +89,15 @@ function App() {
   const [tab, setTab] = useState<Tab>("overview");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const dismissError = useCallback(() => setError(""), []);
+  const dismissNotice = useCallback(() => setNotice(""), []);
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const [splashFinished, setSplashFinished] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setSplashFinished(true), 2200);
+    return () => clearTimeout(timer);
+  }, []);
   const [selected, setSelected] = useState("");
   const [mode, setMode] = useState("working");
   const [diff, setDiff] = useState("");
@@ -116,7 +126,7 @@ function App() {
   const [newBranch, setNewBranch] = useState(false);
   const [protectedBranch, setProtectedBranch] = useState("");
   const [lfs, setLfs] = useState<{ installed: boolean; lfs: string[]; large: string[] }>({ installed: false, lfs: [], large: [] });
-  // The last mutation that ran; a rejected push offers Force push in its error banner.
+  // The last mutation that ran; a rejected push offers Force push in its error toast.
   const [lastOp, setLastOp] = useState("");
   const [page, setPage] = useState(0);
   const [more, setMore] = useState(false);
@@ -230,12 +240,12 @@ function App() {
     };
   }, [repo, selected, mode, tab, hideWhitespace, fullFor]);
   useEffect(() => {
-    if (!ready || error) return;
+    if (!ready || !splashFinished || error) return;
     const desktop = window as Window & {
       ipc?: { postMessage: (message: string) => void };
     };
     desktop.ipc?.postMessage(repo?.path ? "ready:repository" : "ready:welcome");
-  }, [ready, error, repo?.path]);
+  }, [ready, splashFinished, error, repo?.path]);
   const repoPath = repo?.path;
   useEffect(() => {
     if (!repoPath || tab !== "history") return;
@@ -487,6 +497,7 @@ function App() {
     ["branches", "Branches & tags"],
     ["github", "GitHub"],
     ["settings", "Settings"],
+    ["repository", "Repository settings"],
   ];
   const commands: Command[] = repo
     ? [
@@ -518,11 +529,11 @@ function App() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // Skipped while typing or in a dialog, so fields and dialogs keep their own keys.
-      if (!repo || document.querySelector("dialog[open]")) return;
+      if (!ready || !splashFinished || !repo || document.querySelector("dialog[open]")) return;
       if (e.target instanceof Element && e.target.closest("input, textarea, select")) return;
       const ctrl = e.ctrlKey || e.metaKey;
       const n = Number(e.key);
-      if (ctrl && n >= 1 && n <= 6) {
+      if (ctrl && n >= 1 && n <= pages.length) {
         e.preventDefault();
         goTo(pages[n - 1][0]);
       } else if (ctrl && e.shiftKey && e.key.toLowerCase() === "f") {
@@ -543,6 +554,7 @@ function App() {
   const recentMatches = recent.filter((path) =>
     path.toLowerCase().includes(recentFilter.trim().toLowerCase()),
   );
+  if (!ready || !splashFinished) return <WorkspaceSplash dark={dark} />;
   return (
     <div className={repo ? "app" : "app welcome"}>
       <a className="skip-link" href="#main-content">
@@ -624,27 +636,22 @@ function App() {
             )}
           </div>
         </header>
-        <Banner
-          kind="error"
-          text={error}
-          onDismiss={() => setError("")}
-          action={
-            lastOp === "push" && /\[rejected\]|non-fast-forward|stale info/.test(error) && repo?.upstream ? (
-              <button className="destructive-text" onClick={() => setForcing(true)}>
-                Force push…
-              </button>
-            ) : undefined
-          }
-        />
-        <Banner kind="success" text={notice} onDismiss={() => setNotice("")} />
-        {!ready ? (
-          <div className="welcome-card boot-card" aria-busy="true">
-            <span className="skeleton boot-icon" aria-hidden="true" />
-            <h1>Opening your workspace…</h1>
-            <span className="skeleton skeleton-line" aria-hidden="true" />
-            <span className="skeleton skeleton-block" aria-hidden="true" />
-          </div>
-        ) : !repo ? (
+        <div className="toast-notification-container" role="region" aria-label="Notifications">
+          <Toast
+            kind="error"
+            text={error}
+            onDismiss={dismissError}
+            action={
+              lastOp === "push" && /\[rejected\]|non-fast-forward|stale info/.test(error) && repo?.upstream ? (
+                <button className="destructive-text" onClick={() => setForcing(true)}>
+                  Force push…
+                </button>
+              ) : undefined
+            }
+          />
+          <Toast kind="success" text={notice} onDismiss={dismissNotice} />
+        </div>
+        {!repo ? (
           <section className="welcome-card" aria-label="Welcome to gitowl">
             <div className="welcome-main">
               <h1 className="welcome-lockup">
@@ -787,7 +794,9 @@ function App() {
                         ? "Branches & tags"
                         : tab === "github"
                           ? "GitHub"
-                          : "Settings"}
+                          : tab === "repository"
+                            ? "Repository settings"
+                            : "Settings"}
                 </h1>
               </div>
               {/* Page-level controls (the GitHub sections) render here through a portal. */}
@@ -1066,7 +1075,7 @@ function App() {
                       <span className="hint">
                         Green: additions · Red: removals
                       </span>
-                      <div>
+                      <div className="toolbar-actions">
                         <button
                           onClick={() => {
                             setHistoryFile(selected);
@@ -1484,6 +1493,17 @@ function App() {
                 headerSlot={headerSlot}
                 busy={busy}
                 action={mutate}
+              />
+            )}
+            {tab === "repository" && (
+              <RepositorySettings
+                key={repo.path}
+                repo={repo.path}
+                connected={githubConnected}
+                busy={busy}
+                action={mutate}
+                onConnect={() => goTo("github")}
+                headerSlot={headerSlot}
               />
             )}
             {tab === "settings" && (

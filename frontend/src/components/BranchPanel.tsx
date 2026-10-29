@@ -321,19 +321,21 @@ export function BranchPanel({
                     <code>{b.hash}</code>
                   </p>
                 </div>
-                <button disabled={busy} onClick={() => void compare(b.name)}>
-                  Compare
-                </button>
-                <button
-                  disabled={busy}
-                  onClick={() => {
-                    setCheckout(b);
-                    setLocalName(b.localName);
-                    setDialogError("");
-                  }}
-                >
-                  Check out…
-                </button>
+                <div className="branch-actions">
+                  <button disabled={busy} onClick={() => void compare(b.name)}>
+                    Compare
+                  </button>
+                  <button
+                    disabled={busy}
+                    onClick={() => {
+                      setCheckout(b);
+                      setLocalName(b.localName);
+                      setDialogError("");
+                    }}
+                  >
+                    Check out…
+                  </button>
+                </div>
               </div>
             ))}
           </section>

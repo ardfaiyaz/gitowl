@@ -38,7 +38,7 @@ pub fn preview(path: &Path, include_staged: bool) -> Result<Value> {
             blocked.push("Stage the changes you want to add to the latest commit.".into());
         }
     } else if !run(path, &["status", "--porcelain=v1", "--untracked-files=all"])?.is_empty() {
-        blocked.push("Commit or safely set aside your working changes first. This editor requires a clean working tree and index.".into());
+        blocked.push("You need to commit changes before editing this commit.".into());
     }
     if !remote.is_empty() {
         blocked.push(format!("This commit is contained in fetched remote branches: {}. Editing published history is not available here.", remote.lines().collect::<Vec<_>>().join(", ")));

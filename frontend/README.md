@@ -17,7 +17,8 @@ need the authenticated Rust server, so use `cargo run` for anything end to end.
 
 | Path | Purpose |
 |---|---|
-| `src/App.tsx` | Shell, pages (Overview, Changes, History, Branches, GitHub, Settings) and app state |
+| `src/App.tsx` | Shell, page navigation and app state |
+| `src/components/RepositorySettings.tsx` | GitHub repository settings viewer and existing repository/secret editing controls; Ctrl 7 |
 | `src/api.ts` | The single `api(op, data)` call to the local server, with the session token |
 | `src/components/` | Screens and shared parts: `Segmented`, `Dialog` (sheets and alerts), `Diff`, `PrParts`, … |
 | `src/styles/shell.css`, `src/styles/screens.css`, `src/App.css` | Design tokens and component styles |

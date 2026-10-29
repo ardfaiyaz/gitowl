@@ -73,6 +73,7 @@
 - Actions: run workflows, live logs, artifacts
 - Releases, security alerts, README, organizations
 - Secrets, variables, labels, rulesets and danger-zone settings
+- Repository settings page with searchable sections for access, branches, Actions, environments, security, webhooks, deploy keys and Pages
 
 </td><td valign="top">
 
@@ -339,7 +340,7 @@ Outside a repository, gitowl shows a welcome screen with **Open Folder**, **Clon
 | Action | Shortcut |
 |---|---|
 | Command palette | <kbd>Ctrl</kbd> <kbd>K</kbd> (<kbd>⌘</kbd> <kbd>K</kbd> on macOS) |
-| Switch page | <kbd>Ctrl</kbd> <kbd>1</kbd>–<kbd>6</kbd> |
+| Switch page | <kbd>Ctrl</kbd> <kbd>1</kbd>–<kbd>7</kbd> |
 | Commit staged changes | <kbd>Ctrl</kbd> <kbd>Enter</kbd> in the message box |
 | Fetch | <kbd>Ctrl</kbd> <kbd>⇧</kbd> <kbd>F</kbd> |
 | Next / previous changed file | <kbd>J</kbd> / <kbd>K</kbd> |

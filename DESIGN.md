@@ -19,7 +19,9 @@ macOS/iOS: calm surfaces, capsule controls, inset grouped cards, and motion that
 redefined for dark mode (`data-theme` on the root, or the OS setting). Components use `var(--…)` only;
 never hard-code a new colour.
 
-**Colour.** iOS system colours, darkened where text needs 4.5:1 contrast:
+**Colour.** Light mode uses iOS system colours, darkened where text needs 4.5:1 contrast.
+Dark mode follows [GitHub's Primer dark palette](https://github.com/primer/primitives): near-black
+workspace, charcoal surfaces, gray borders, blue accents and GitHub's semantic diff colors.
 
 | Role | Light | Notes |
 |---|---|---|
@@ -27,8 +29,10 @@ never hard-code a new colour.
 | Accent text | `#005BBF` | links, secondary buttons |
 | Success | `#1E7B34` | |
 | Destructive | `#C00013` | red is reserved for destructive actions and things needing attention |
-| Secondary label | `#5A5A5F` | dark mode `#A3ABBD` |
-| Dark surfaces | `#11151F` / `#1B2333` | navy, not grey |
+| Secondary label | `#5A5A5F` | dark mode `#9198A1` |
+| Dark surfaces | `#010409` / `#0D1117` / `#151B23` | workspace / panels / raised surfaces |
+| Dark borders | `#3D444D` | subtle outlines and separators |
+| Dark accent | `#4493F8` / `#1F6FEB` | links / filled actions |
 
 Status pills always include their text (open, merged, failed, draft…), never colour alone.
 
@@ -48,7 +52,7 @@ Reuse these; don't build look-alikes.
 | Mutually exclusive choices | `<Segmented>` (`components/Segmented.tsx`) | Grey capsule track, 2 px inset, white sliding thumb, 13 px labels 500 → 600 when chosen. Never a row of loose buttons. |
 | A question before acting | `<Dialog alert="destructive" \| "caution">` | 340 px, centred icon and title, one line of text, two equal buttons; the red one sits on the right and Cancel gets focus first. |
 | A form | `<Sheet>` (`components/RepoDialogs.tsx`) | Cancel · title · action bar over inset grouped fields. Can't close while busy. No drag grabber on desktop. |
-| Feedback after an action | `<Banner>` (`components/Dialog.tsx`) | Grows from zero height; success dismisses after 5 s (hover pauses), errors stay and show Git's output. May carry one action, e.g. Force push… after a rejected push. |
+| Feedback after an action | `<Toast>` (`components/Toast.tsx`) | GitHub Desktop centered capsule: 14 px semibold, 10 by 20 px padding, 100 ms scale-in and 250 ms fade-out. Success dismisses after 3 s; hover, keyboard focus and expanded details pause it. Errors retain dismissal, details and recovery actions. |
 | Loading | `<Skeleton>` | Shimmer rows; screen readers hear one "Loading…". |
 | Grouped settings | `.settings-group` / `.settings-row` | Label left, control right, hairline between rows. |
 | Lists of records | `.grouped-list` | Inset hairlines that start where the text starts. |
@@ -56,6 +60,8 @@ Reuse these; don't build look-alikes.
 
 Buttons: one filled (primary) action per area; the rest are tinted secondary capsules; destructive confirmations
 use a red primary. Badges are neutral grey counts; red only when something needs attention.
+Action buttons center their label and icon with an 8 px gap; action groups keep an 8 px gap and wrap
+when space runs out. Navigation, file rows and other record selectors stay left-aligned.
 
 ## Layouts
 
@@ -69,6 +75,11 @@ use a red primary. Badges are neutral grey counts; red only when something needs
 - **Changes.** File list and commit form on the left, diff on the right. Diff toolbar: Hide whitespace, Wrap
   lines, Find, Unified / Side by side. While a server-side diff option is on, hunk staging pauses and says why.
   Images get Side by side / Swipe / Onion skin.
+- **Diff reading area.** Code uses 14 px text with generous line spacing. Changes and History reserve at
+  least 480 px for the diff and grow with the viewport; the whole page scrolls to accommodate its controls.
+- **Startup.** A centered gitowl logo reveals gently over a soft glow, with an indeterminate light below.
+  Show it for at least 2.2 seconds while loading in parallel, then show the workspace or welcome page.
+  Reduced motion keeps the artwork static. Loading errors remain visible after the splash.
 - **History.** Commit list with a drag grip (top or bottom quarter reorders, the middle squashes) and
   <kbd>Alt</kbd> <kbd>↑</kbd>/<kbd>↓</kbd>; both open the rebase plan pre-arranged. Filtered to one file, a Diff /
   Blame switch appears. The reflog sits under the diff.
@@ -77,6 +88,9 @@ use a red primary. Badges are neutral grey counts; red only when something needs
   Review threads sit under their diff line.
 - **Settings.** A 240 px section list beside a pane of 17 px section titles over grouped cards. The danger zone
   is a red-ringed card.
+- **Repository settings.** Live GitHub settings use the grouped settings layout, searchable sections on wide
+  windows, and a section picker below 900 px. Unavailable settings show an access/configuration message;
+  they never appear as disabled or empty values. GitHub-only controls link to their settings section.
 - Lists and details stack below 760 px; settings below 900 px.
 
 ## Motion
@@ -87,7 +101,7 @@ Motion explains where something came from. Easing is the iOS curve `cubic-bezier
 |---|---|
 | Sheets enter / exit | rise 24 px + scale .98 in 320 ms; exit 200 ms |
 | Alerts | scale .94 → 1 in 260 ms |
-| Notices | height grows from 0 in 320 ms so content slides down |
+| Toasts | centered overlay, 100 ms scale-in / 250 ms fade-out; no layout shift |
 | Menus and popovers | open from their trigger in 150–180 ms |
 | Segmented thumb, sidebar pill | slide 320 ms |
 | Theme change | cross-fade 240 ms |

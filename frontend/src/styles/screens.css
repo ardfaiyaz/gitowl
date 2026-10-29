@@ -5,6 +5,96 @@
  */
 
 /* ---------- Shared: grouped lists, stagger, skeletons ---------- */
+/* GitHub Desktop toast geometry and motion; errors retain details and dismissal. */
+.toast-notification-container {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  pointer-events: none;
+}
+.toast-notification {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 100px;
+  max-width: min(640px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 10px 20px;
+  border-radius: 100px;
+  background: var(--toast-background);
+  color: var(--toast-color);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  pointer-events: auto;
+  animation: toast-appear 100ms ease-out both;
+}
+.toast-notification.toast-closing {
+  animation: toast-exit 250ms ease-out both;
+  pointer-events: none;
+}
+.toast-content {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.toast-details {
+  margin-top: 8px;
+  font-weight: 400;
+}
+.toast-details summary {
+  cursor: pointer;
+  text-decoration: underline;
+}
+.toast-details pre {
+  max-height: min(240px, 40dvh);
+  margin-top: 10px;
+  overflow: auto;
+  color: inherit;
+  text-align: left;
+  font: 12px/1.6 var(--font-mono);
+}
+.toast-notification:has(details[open]) {
+  border-radius: 12px;
+}
+.toast-notification .toast-close {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+}
+.toast-close:hover {
+  background: var(--fill-strong);
+}
+.toast-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+.toast-actions button {
+  color: inherit;
+  text-decoration: underline;
+}
+@keyframes toast-appear {
+  from { transform: scale(0.25); opacity: 0.1; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes toast-exit {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
 .group-label {
   margin: 14px 0 8px;
   padding: 0 16px;
@@ -107,7 +197,7 @@
 /* ---------- Sheets (every Dialog) ---------- */
 .modal.sheet {
   padding: 14px 20px 22px;
-  background: var(--bg);
+  background: var(--dialog-bg, var(--bg));
   border-radius: 20px;
 }
 .modal.sheet[open] {
@@ -230,7 +320,7 @@
   box-shadow: inset 0 0 0 1px var(--label-2);
 }
 .switch:checked {
-  background: var(--green-dot);
+  background: var(--switch-checked, var(--green-dot));
 }
 .switch:checked::before {
   transform: translateX(20px);
@@ -292,7 +382,10 @@
 /* ---------- Changes ---------- */
 .changes-layout,
 .history-layout {
-  gap: 18px;
+  gap: 24px;
+  height: auto;
+  min-height: 0;
+  align-items: start;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -300,8 +393,12 @@
 }
 .file-panel {
   gap: 8px;
+  height: clamp(540px, calc(100dvh - 200px), 900px);
   background: transparent;
   border-right: 0;
+}
+.history-layout > .commit-list {
+  max-height: clamp(540px, calc(100dvh - 200px), 900px);
 }
 .file-panel > .panel-heading {
   height: auto;
@@ -398,6 +495,8 @@
 }
 .file-row button.row-discard {
   min-height: 28px;
+  justify-content: center;
+  border-radius: 999px;
   padding: 0 10px;
   background: var(--fill);
   font-size: 12px;
@@ -466,9 +565,26 @@
 }
 .diff-toolbar button {
   min-height: 32px;
-  margin-left: 6px;
+  margin-left: 0;
   padding: 0 14px;
   font-weight: 600;
+}
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.toolbar-actions > button,
+.button-row > button,
+.branch-actions > button,
+.tag-actions > button,
+.remote-actions > button {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+.panel-heading > .button-row {
+  margin: 0;
 }
 .diff-mode {
   align-self: flex-end;
@@ -484,9 +600,9 @@
   box-shadow: var(--shadow-card);
 }
 .diff {
-  padding: 0 0 8px;
-  font-size: 12.5px;
-  line-height: 2;
+  padding: 12px 0 16px;
+  font-size: 14px;
+  line-height: 2.2;
 }
 .line-no,
 .diff-line .line-no + .line-no {
@@ -498,8 +614,8 @@
   font-size: 12px;
 }
 .diff-line code {
-  padding-left: 10px;
-  padding-right: 16px;
+  padding-left: 16px;
+  padding-right: 24px;
 }
 .line-pick {
   width: 36px;
@@ -563,6 +679,7 @@
   flex-shrink: 0;
   width: 110px;
   font-size: 15px;
+  margin: 0;
 }
 .form-rows input:not([type="checkbox"]):not([type="radio"]),
 .form-rows select {
@@ -623,25 +740,26 @@
   overflow: auto;
   padding: 6px 0;
   border-radius: 14px;
-  background: #11151c;
-  color: #d6dbe4;
+  background: var(--log-bg);
+  color: var(--log-text);
   font: 12.5px/1.75 var(--font-mono);
 }
 .log-view .log-group {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   width: 100%;
   min-height: 28px;
   padding: 0 14px;
   border-radius: 0;
   background: transparent;
-  color: #d6dbe4;
+  color: var(--log-text);
   font: inherit;
   text-align: left;
 }
 .log-view .log-group:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--log-hover);
 }
 .log-group svg {
   flex-shrink: 0;
@@ -654,7 +772,7 @@
 }
 .log-group span {
   margin-left: auto;
-  color: #7d8696;
+  color: var(--log-muted);
 }
 .log-line {
   display: flex;
@@ -663,14 +781,14 @@
   overflow-wrap: anywhere;
 }
 .log-line.err {
-  background: rgba(255, 69, 58, 0.14);
-  color: #ffb4ad;
+  background: var(--log-error-bg);
+  color: var(--log-error-text);
 }
 .log-no {
   flex-shrink: 0;
   width: 44px;
   padding-right: 12px;
-  color: #6b7383;
+  color: var(--log-line-number);
   text-align: right;
   user-select: none;
 }
@@ -798,19 +916,22 @@
   color: var(--label-2);
 }
 .plan-action {
-  appearance: none;
-  -webkit-appearance: none;
   flex-shrink: 0;
   min-height: 28px;
-  padding: 3px 12px;
+  padding: 3px 34px 3px 12px;
   border: 0;
   border-radius: 999px;
-  background: var(--accent-tint);
+  background-color: var(--accent-tint);
   color: var(--accent-text);
   font-size: 13px;
   font-weight: 600;
   text-align: center;
   cursor: pointer;
+}
+@supports (appearance: base-select) {
+  .plan-action {
+    padding-right: 12px;
+  }
 }
 .plan-move {
   display: flex;
@@ -827,11 +948,11 @@
   padding-left: 44px;
 }
 :is(.plan-squash, .plan-fixup) .plan-action {
-  background: var(--purple-tint);
+  background-color: var(--purple-tint);
   color: var(--purple);
 }
 .plan-drop .plan-action {
-  background: var(--red-tint);
+  background-color: var(--red-tint);
   color: var(--red);
 }
 .rebase-plan li.plan-drop .plan-message > span {
@@ -855,7 +976,7 @@
   width: 28px;
   height: 28px;
   border-radius: 7px;
-  background: #ff9500;
+  background: var(--warning-fill);
   color: #ffffff;
 }
 .modal .warning-card p {
@@ -986,6 +1107,8 @@
   border-radius: 999px;
   font-size: 15px;
   font-weight: 400;
+  min-width: 0;
+  max-width: 100%;
 }
 .capsule-select select {
   min-height: 36px;
@@ -1029,13 +1152,13 @@
   background: var(--green-dot);
 }
 .outcome-failure {
-  background: #ff3b30;
+  background: var(--failure-fill);
 }
 .outcome-pending {
-  background: #ff9500;
+  background: var(--warning-fill);
 }
 .outcome-neutral {
-  background: #8e8e93;
+  background: var(--neutral-indicator);
 }
 .job-group {
   display: flex;
@@ -1260,7 +1383,7 @@ mark.find-hit {
   border-radius: 3px;
 }
 mark.find-hit.current {
-  background: var(--accent);
+  background: var(--find-current-bg, var(--accent));
   color: #fff;
 }
 .diff-expand {
@@ -1286,6 +1409,7 @@ mark.find-hit.current {
   align-items: baseline;
 }
 .blame-who {
+  display: block;
   min-height: 0;
   padding: 0 10px 0 16px;
   overflow: hidden;
@@ -1312,6 +1436,7 @@ mark.find-hit.current {
   flex-direction: column;
   gap: 10px;
   margin-top: 12px;
+  margin-bottom: 24px;
 }
 .reflog h2 {
   margin: 0 4px;
@@ -1323,6 +1448,9 @@ mark.find-hit.current {
   flex: 1;
   flex-direction: column;
   min-width: 0;
+}
+.reflog li > button {
+  flex: none;
 }
 .reflog li strong {
   font-size: 14px;
@@ -1357,7 +1485,18 @@ table.shortcuts td + td {
 }
 /* History keeps room for the diff or blame; the reflog scrolls after a few rows. */
 .diff-panel > .diff {
-  min-height: 280px;
+  flex: none;
+  height: clamp(480px, 65dvh, 960px);
+  min-height: 480px;
+}
+@media (max-width: 760px) {
+  .changes-layout,
+  .history-layout {
+    align-items: stretch;
+  }
+  .diff-panel {
+    max-height: none;
+  }
 }
 .reflog {
   flex: none;
@@ -1628,13 +1767,16 @@ table.shortcuts td + td {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
 }
 .github-header {
   align-items: flex-start;
   padding: 16px 18px;
   background: var(--surface);
   border-radius: 16px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--group-shadow, var(--shadow-card));
 }
 .github-header > div:first-child {
   flex: 1 1 360px;
@@ -1721,7 +1863,7 @@ table.shortcuts td + td {
   background: var(--surface);
   border: 0;
   border-radius: 16px;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--group-shadow, var(--shadow-card));
 }
 .settings-pane .settings-card {
   padding: 18px 20px;
@@ -1749,6 +1891,7 @@ table.shortcuts td + td {
 }
 .settings-row > label {
   flex: 0 0 120px;
+  margin: 0;
 }
 .settings-row small {
   display: block;
@@ -1775,6 +1918,87 @@ table.shortcuts td + td {
 }
 .settings-pane .settings-card {
   align-self: stretch;
+}
+
+/* GitHub repository settings reuse the grouped settings layout. */
+.repository-section-picker {
+  display: none;
+}
+.repository-settings .settings-nav > input {
+  width: 100%;
+  margin-bottom: 8px;
+}
+.repository-settings-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  padding: 0 4px 4px;
+  overflow-wrap: anywhere;
+}
+.repository-settings-summary > span {
+  color: var(--label-2);
+  font-size: 13px;
+}
+.repository-group-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+}
+.repository-group-heading h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+.repository-settings .settings-row {
+  flex-wrap: wrap;
+}
+.repository-settings .settings-row > span {
+  flex-basis: 180px;
+  overflow-wrap: anywhere;
+}
+.repository-setting-value {
+  max-width: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.repository-empty,
+.repository-unavailable {
+  margin: 0;
+  padding: 16px;
+  color: var(--label-2);
+  font-size: 13px;
+}
+.repository-unavailable p {
+  margin: 0 0 8px;
+}
+.repository-unavailable summary {
+  cursor: pointer;
+}
+.repository-connect {
+  margin: 0 30px 30px;
+}
+.repository-connect p {
+  margin: 12px 0 18px;
+  color: var(--label-2);
+}
+@media (max-width: 900px) {
+  .repository-settings .settings-nav > button,
+  .repository-settings .settings-nav > p,
+  .repository-settings .settings-nav > input,
+  .repository-settings-search-label {
+    display: none;
+  }
+  .repository-section-picker {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+  }
 }
 
 /* ---------- Alerts (board: Popups & Modals): one question, two equal buttons ---------- */
@@ -1814,7 +2038,7 @@ table.shortcuts td + td {
   height: 20px;
 }
 .alert-icon.destructive {
-  background: rgba(255, 59, 48, 0.12);
+  background: var(--red-tint);
   color: var(--danger, #c00013);
 }
 .alert-icon.caution {
@@ -1834,6 +2058,7 @@ table.shortcuts td + td {
 }
 .modal.alert .modal-footer {
   display: grid;
+  align-items: stretch;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 4px;
@@ -1865,11 +2090,7 @@ button.small {
 .destructive-text {
   color: var(--danger, #c00013);
 }
-.banner-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-}
+
 .note {
   display: flex;
   align-items: center;
@@ -1881,15 +2102,7 @@ button.small {
 }
 .note.info {
   background: var(--info-bg, #e6f0fc);
-  box-shadow: inset 0 0 0 0.5px rgba(0, 91, 191, 0.22);
-}
-:root[data-theme="dark"] .note.info {
-  background: rgba(61, 149, 255, 0.14);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .note.info {
-    background: rgba(61, 149, 255, 0.14);
-  }
+  box-shadow: inset 0 0 0 0.5px var(--info-border);
 }
 .note > span {
   flex: 1;
@@ -1949,8 +2162,8 @@ button.small {
 .tag-lfs {
   padding: 3px 6px;
   border-radius: 6px;
-  background: rgba(137, 68, 171, 0.12);
-  color: #8944ab;
+  background: var(--done-bg);
+  color: var(--done-text);
   font-size: 11px;
   font-weight: 600;
 }
@@ -2083,7 +2296,7 @@ button.small {
   margin-left: 6px;
   padding: 3px 6px;
   border-radius: 6px;
-  background: rgba(30, 123, 52, 0.12);
+  background: var(--success-muted);
   color: var(--success, #1e7b34);
   font-size: 11px;
   font-weight: 600;
@@ -2098,6 +2311,7 @@ button.small {
 }
 .untracked-row > button.small {
   flex: none;
+  justify-content: center;
   background: var(--fill);
   color: var(--accent-text);
 }
@@ -2107,7 +2321,8 @@ button.small {
   flex: none;
 }
 .settings-row > select {
-  min-width: 220px;
+  width: 220px;
+  min-width: 0;
 }
 .settings-row > code {
   color: var(--label-2);
@@ -2122,11 +2337,21 @@ button.small {
 .settings-row > button {
   flex: none;
 }
+@media (max-width: 760px) {
+  .settings-row,
+  .reflog .grouped-list > li {
+    flex-wrap: wrap;
+  }
+  .settings-row > span:first-child,
+  .reflog li > div {
+    flex-basis: 100%;
+  }
+}
 .settings-pane .danger-title {
   color: var(--danger, #c00013);
 }
 .settings-group.danger {
-  box-shadow: 0 0 0 1px rgba(192, 0, 19, 0.25), var(--shadow-card);
+  box-shadow: 0 0 0 1px var(--danger-border), var(--shadow-card);
 }
 .settings-caption {
   margin: 8px 4px 0;
@@ -2137,7 +2362,7 @@ button.small {
 .ok-pill {
   padding: 3px 7px;
   border-radius: 6px;
-  background: rgba(30, 123, 52, 0.12);
+  background: var(--success-muted);
   color: var(--success, #1e7b34);
   font-size: 11px;
   font-weight: 600;
@@ -2229,12 +2454,12 @@ button.small {
   text-transform: capitalize;
 }
 .sev-high {
-  background: rgba(192, 0, 19, 0.12);
+  background: var(--danger-muted);
   color: var(--danger, #c00013);
 }
 .sev-medium {
-  background: rgba(201, 52, 0, 0.12);
-  color: #c93400;
+  background: var(--attention-muted);
+  color: var(--attention-text);
 }
 .sev-low {
   background: var(--fill);

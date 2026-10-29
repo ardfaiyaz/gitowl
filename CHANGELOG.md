@@ -7,6 +7,22 @@ include breaking changes.
 
 ## [Unreleased]
 
+### Added
+- A dedicated Repository settings page with live GitHub settings, searchable sections, existing repository and secret controls, and links to manage additional settings on GitHub.
+
+### Changed
+- Top success/error banners are replaced with centered GitHub Desktop-style toast capsules, matching its colors, padding, typography and entrance/exit timing. Success messages dismiss after three seconds; errors retain dismissal, details and recovery actions.
+- Changes and History give diffs a larger reading area, larger code text and more space between panels.
+- Workspace startup shows an animated gitowl logo splash for at least 2.2 seconds, continuing until loading finishes, instead of a skeleton card.
+- Dark mode now uses GitHub's dark palette throughout the app, including panels, controls, dialogs, status colors, diffs and logs. Light mode keeps its existing palette.
+
+### Fixed
+- Dropdown labels stay on one line, comparison selectors size to their text, and grouped controls retain space for labels and chevrons instead of squeezing or clipping.
+- Centered action-button labels and icons, added consistent wrapping toolbar gaps, and improved spacing for branch, recovery and package actions in narrow windows.
+- Open on GitHub from History opens the selected commit's detail page instead of its file tree.
+- The commit editor uses a short, plain-language message when uncommitted changes block editing.
+- Added bottom spacing below the reflog panel.
+
 ## [0.1.1] - 2026-10-29
 
 ### Fixed

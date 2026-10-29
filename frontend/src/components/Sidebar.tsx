@@ -8,6 +8,7 @@ export type Tab =
   | "history"
   | "branches"
   | "github"
+  | "repository"
   | "settings";
 export type Theme = "system" | "light" | "dark";
 
@@ -17,6 +18,7 @@ const items: [Tab, IconName, string][] = [
   ["history", "history", "History"],
   ["branches", "branch", "Branches & tags"],
   ["github", "cloud", "GitHub"],
+  ["repository", "settings", "Repository settings"],
 ];
 const dots = ["#34c759", "#2f6bff", "#ff9f0a", "#af52de", "#ff375f"];
 const baseName = (path: string) => path.split(/[\\/]/).filter(Boolean).pop() ?? path;
