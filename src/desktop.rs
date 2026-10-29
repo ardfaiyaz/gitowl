@@ -23,7 +23,32 @@ pub fn run(url: &str, runtime: &tokio::runtime::Runtime) -> Result<(), Box<dyn s
         .with_min_inner_size(LogicalSize::new(640.0, 480.0))
         .build(&event_loop)?;
     let allowed = format!("{}/", url.split("/#").next().unwrap_or(url));
-    let builder = WebViewBuilder::new()
+    // WebView2 otherwise writes beside the executable, which fails after installation
+    // into Program Files, even when the controller uses an incognito session.
+    #[cfg(windows)]
+    let mut web_context = {
+        let local = std::env::var_os("LOCALAPPDATA").ok_or_else(|| {
+            std::io::Error::other("LOCALAPPDATA is missing; cannot create WebView2 data folder")
+        })?;
+        let directory = std::path::PathBuf::from(local)
+            .join("gitowl")
+            .join("WebView2");
+        std::fs::create_dir_all(&directory).map_err(|error| {
+            std::io::Error::new(
+                error.kind(),
+                format!(
+                    "Cannot create WebView2 data folder {}: {error}",
+                    directory.display()
+                ),
+            )
+        })?;
+        wry::WebContext::new(Some(directory))
+    };
+    #[cfg(windows)]
+    let builder = WebViewBuilder::new_with_web_context(&mut web_context);
+    #[cfg(not(windows))]
+    let builder = WebViewBuilder::new();
+    let builder = builder
         .with_url(url)
         .with_incognito(true)
         .with_devtools(false)

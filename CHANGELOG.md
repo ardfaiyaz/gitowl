@@ -7,6 +7,15 @@ include breaking changes.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-29
+
+### Fixed
+- Windows desktop startup after installing to `Program Files`: WebView2 stores its data in
+  `%LOCALAPPDATA%\gitowl\WebView2` instead of trying to write beside the executable.
+
+### Added
+- Windows native-window startup checks from a write-protected executable folder in CI and releases.
+
 ## [0.1.0] - 2026-10-29
 
 First public alpha release.
@@ -36,5 +45,6 @@ First public alpha release.
 ### Changed
 - macOS/iOS-style interface throughout: segmented controls, alerts for every confirmation, inset grouped settings.
 
-[Unreleased]: https://github.com/ardfaiyaz/gitowl/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/ardfaiyaz/gitowl/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/ardfaiyaz/gitowl/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ardfaiyaz/gitowl/releases/tag/v0.1.0

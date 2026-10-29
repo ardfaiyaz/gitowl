@@ -32,5 +32,19 @@ jobs:
       - run: cargo clippy --locked --all-targets -- -D warnings
       - run: cargo test --locked
       - run: cargo build --locked
+      - name: Install WebView2 Runtime for desktop testing
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $runtime = Get-ChildItem "${env:ProgramFiles(x86)}\Microsoft\EdgeWebView\Application\*\msedgewebview2.exe", "$env:LOCALAPPDATA\Microsoft\EdgeWebView\Application\*\msedgewebview2.exe" -ErrorAction SilentlyContinue
+          if (-not $runtime) {
+            $installer = Join-Path $env:RUNNER_TEMP 'WebView2Setup.exe'
+            Invoke-WebRequest 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile $installer
+            $result = Start-Process $installer -ArgumentList '/silent', '/install' -WindowStyle Hidden -Wait -PassThru
+            if ($result.ExitCode -ne 0) { throw "WebView2 installation failed: $($result.ExitCode)" }
+          }
+      - name: Check native desktop startup from a protected folder
+        if: runner.os == 'Windows'
+        run: node scripts/desktop-smoke.mjs
       - run: node scripts/smoke.mjs
       - run: node scripts/smoke.mjs target/debug/gitowl${{ runner.os == 'Windows' && '.exe' || '' }} --outside

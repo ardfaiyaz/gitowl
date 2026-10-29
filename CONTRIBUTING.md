@@ -112,6 +112,8 @@ node scripts/smoke.mjs                 # end-to-end HTTP checks against the debu
 CI also runs the smoke script with `--outside` to check the welcome-screen startup path.
 The separate `install.yml` workflow installs the documented Fedora/Arch packages and checks
 native headers and linking in containers when the installation instructions change.
+On Windows, `node scripts/desktop-smoke.mjs` also checks native-window rendering from a
+write-protected executable folder. It requires the WebView2 Runtime and uses a temporary repository.
 
 Optional:
 

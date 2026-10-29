@@ -125,9 +125,9 @@ You can [download a prebuilt release](#option-1-prebuilt-release) or [build from
 | macOS (Apple silicon) | `gitowl-v<version>-macos.dmg` | Drag **gitowl.app** to Applications, then set up the command below. Intel Macs: build from source. |
 | Linux (x86_64) | `gitowl_<version>-1_amd64.deb` or `…-x86_64-unknown-linux-gnu.tar.gz` | Built on Ubuntu 24.04. On older distributions, build from source. |
 
-Archive names include the tag prefix, for example `gitowl-v0.1.0-x86_64-pc-windows-msvc.zip`.
+Archive names include the tag prefix, for example `gitowl-v0.1.1-x86_64-pc-windows-msvc.zip`.
 Extract the archive and put its executable in a folder on your PATH. To install a Debian package,
-run `sudo apt install ./gitowl_0.1.0-1_amd64.deb` from the download folder.
+run `sudo apt install ./gitowl_0.1.1-1_amd64.deb` from the download folder.
 
 After moving the macOS app to Applications, make its command available in your terminal:
 
@@ -141,14 +141,14 @@ Every file has a matching `.sha256` checksum. Verify a download before installin
 
 ```sh
 # macOS (download both the asset and its .sha256 file into the same folder)
-shasum -a 256 -c gitowl-v0.1.0-macos.dmg.sha256
+shasum -a 256 -c gitowl-v0.1.1-macos.dmg.sha256
 # Linux
-sha256sum -c gitowl_0.1.0-1_amd64.deb.sha256
+sha256sum -c gitowl_0.1.1-1_amd64.deb.sha256
 ```
 
 ```powershell
 # Windows: download the archive and its .sha256 file into the same folder
-$asset = 'gitowl-v0.1.0-x86_64-pc-windows-msvc.zip'
+$asset = 'gitowl-v0.1.1-x86_64-pc-windows-msvc.zip'
 $expected = (Get-Content "$asset.sha256").Split(' ')[0]
 if ((Get-FileHash $asset -Algorithm SHA256).Hash -ne $expected) {
     throw 'Checksum mismatch. Download the file again before installing.'
@@ -356,6 +356,7 @@ gitowl keeps almost no state of its own:
 | What | Where |
 |---|---|
 | Recent projects | `%LOCALAPPDATA%\gitowl\recent.json` (Windows), `$XDG_CONFIG_HOME/gitowl/recent.json` or `~/.config/gitowl/recent.json` |
+| WebView2 browser data (Windows) | `%LOCALAPPDATA%\gitowl\WebView2` |
 | Theme, sidebar, editor choice | The app window's local storage; the native window uses an incognito session, so these preferences may reset when it closes |
 | Commit identity, signing, diff tool | Your normal Git config (`git config`) — gitowl reads and writes it there |
 | Recovery points | `refs/gitowl/recovery/*` inside each repository; manage them in **Settings → Recovery & packages** |
@@ -364,6 +365,20 @@ gitowl keeps almost no state of its own:
 ---
 
 ## Troubleshooting
+
+<details>
+<summary><strong>Windows v0.1.0: WebView2 error 0x80070005 ("Access is denied")</strong></summary>
+
+The v0.1.0 installer puts the executable in Program Files, but that build tries to create
+WebView2's data folder beside it. Use a writable folder for the current PowerShell session:
+
+```powershell
+$env:WEBVIEW2_USER_DATA_FOLDER = "$env:LOCALAPPDATA\gitowl\WebView2"
+gitowl
+```
+
+Upgrade to v0.1.1 or later to use this location automatically. Administrator rights are not required to run gitowl.
+</details>
 
 <details>
 <summary><strong>The window is blank, or shows an old interface</strong></summary>
