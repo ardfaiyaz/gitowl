@@ -1,3 +1,4 @@
+mod activity;
 mod branches;
 mod commit_edit;
 mod conflict;

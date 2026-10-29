@@ -83,6 +83,7 @@
 - Light and dark mode, collapsible sidebar
 - macOS/iOS-style design, accessible names and focus rings throughout
 - Overview with review requests and your GitHub inbox
+- Repository activity heatmap with daily commit counts and year selection across local and fetched branches; works offline without GitHub sign-in
 
 </td></tr>
 </table>
@@ -126,9 +127,9 @@ You can [download a prebuilt release](#option-1-prebuilt-release) or [build from
 | macOS (Apple silicon) | `gitowl-v<version>-macos.dmg` | Drag **gitowl.app** to Applications, then set up the command below. Intel Macs: build from source. |
 | Linux (x86_64) | `gitowl_<version>-1_amd64.deb` or `…-x86_64-unknown-linux-gnu.tar.gz` | Built on Ubuntu 24.04. On older distributions, build from source. |
 
-Archive names include the tag prefix, for example `gitowl-v0.1.1-x86_64-pc-windows-msvc.zip`.
+Archive names include the tag prefix, for example `gitowl-v1.0.0-x86_64-pc-windows-msvc.zip`.
 Extract the archive and put its executable in a folder on your PATH. To install a Debian package,
-run `sudo apt install ./gitowl_0.1.1-1_amd64.deb` from the download folder.
+run `sudo apt install ./gitowl_1.0.0-1_amd64.deb` from the download folder.
 
 After moving the macOS app to Applications, make its command available in your terminal:
 
@@ -142,14 +143,14 @@ Every file has a matching `.sha256` checksum. Verify a download before installin
 
 ```sh
 # macOS (download both the asset and its .sha256 file into the same folder)
-shasum -a 256 -c gitowl-v0.1.1-macos.dmg.sha256
+shasum -a 256 -c gitowl-v1.0.0-macos.dmg.sha256
 # Linux
-sha256sum -c gitowl_0.1.1-1_amd64.deb.sha256
+sha256sum -c gitowl_1.0.0-1_amd64.deb.sha256
 ```
 
 ```powershell
 # Windows: download the archive and its .sha256 file into the same folder
-$asset = 'gitowl-v0.1.1-x86_64-pc-windows-msvc.zip'
+$asset = 'gitowl-v1.0.0-x86_64-pc-windows-msvc.zip'
 $expected = (Get-Content "$asset.sha256").Split(' ')[0]
 if ((Get-FileHash $asset -Algorithm SHA256).Hash -ne $expected) {
     throw 'Checksum mismatch. Download the file again before installing.'

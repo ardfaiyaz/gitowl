@@ -5,6 +5,7 @@ import { Icon } from "./Icon";
 import type { Tab } from "./Sidebar";
 import { ago } from "../ago";
 import { Segmented } from "./Segmented";
+import { RepositoryActivity } from "./RepositoryActivity";
 
 type Commit = { id: string; author: string; message: string; time: string };
 type PullRequest = {
@@ -119,6 +120,7 @@ export function Overview({
           )}
         </li>
       </ul>
+      <RepositoryActivity key={repo.path} repo={repo.path} fingerprint={repo.fingerprint} />
       {signedIn ? (
         <ForYou repo={repo} onMutate={onMutate} onError={onError} onUnread={onUnread} />
       ) : (

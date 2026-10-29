@@ -90,7 +90,7 @@ impl Service {
         match op {
             "bootstrap" => {
                 return Ok(
-                    json!({"repo":self.current.as_ref().map(|p|git::display(p)), "home":git::display(&home()), "recent":recent()}),
+                    json!({"version":env!("CARGO_PKG_VERSION"), "repo":self.current.as_ref().map(|p|git::display(p)), "home":git::display(&home()), "recent":recent()}),
                 );
             }
             "open" => {
@@ -499,6 +499,7 @@ impl Service {
                     .map_err(|e| format!("Couldn't start {program}: {e}"))?;
                 "Opened.".to_owned()
             }
+            "repository_activity" => return crate::activity::repository_activity(&path),
             "history" => {
                 if run(&path, &["rev-parse", "HEAD"]).is_err() {
                     return Ok(json!({"commits":[],"more":false}));

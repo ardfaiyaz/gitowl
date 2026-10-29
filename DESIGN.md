@@ -72,6 +72,10 @@ when space runs out. Navigation, file rows and other record selectors stay left-
   places its section control there).
 - **Overview.** Repository status as one line of linked facts, never metric tiles; review requests and the
   GitHub inbox when signed in.
+  Repository activity uses a GitHub-style green calendar with month/day labels and a year picker. Counts
+  come from commit author dates in local and fetched branches, deduplicated by Git, across all contributors.
+  Keep this distinct from account-wide GitHub contributions. Calendar cells support arrow keys and daily
+  count labels; narrow windows scroll the calendar horizontally without widening the page.
 - **Changes.** File list and commit form on the left, diff on the right. Diff toolbar: Hide whitespace, Wrap
   lines, Find, Unified / Side by side. While a server-side diff option is on, hunk staging pauses and says why.
   Images get Side by side / Swipe / Onion skin.

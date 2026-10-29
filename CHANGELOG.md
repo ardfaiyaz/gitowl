@@ -7,7 +7,10 @@ include breaking changes.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-30
+
 ### Added
+- A GitHub-style repository activity heatmap in Overview, with daily commit counts, year selection and keyboard navigation. It counts local and fetched branch history across contributors without GitHub sign-in.
 - A dedicated Repository settings page with live GitHub settings, searchable sections, existing repository and secret controls, and links to manage additional settings on GitHub.
 
 ### Changed
@@ -17,6 +20,7 @@ include breaking changes.
 - Dark mode now uses GitHub's dark palette throughout the app, including panels, controls, dialogs, status colors, diffs and logs. Light mode keeps its existing palette.
 
 ### Fixed
+- The welcome screen reads the running package version instead of displaying an outdated alpha version.
 - Dropdown labels stay on one line, comparison selectors size to their text, and grouped controls retain space for labels and chevrons instead of squeezing or clipping.
 - Centered action-button labels and icons, added consistent wrapping toolbar gaps, and improved spacing for branch, recovery and package actions in narrow windows.
 - Open on GitHub from History opens the selected commit's detail page instead of its file tree.
@@ -61,6 +65,7 @@ First public alpha release.
 ### Changed
 - macOS/iOS-style interface throughout: segmented controls, alerts for every confirmation, inset grouped settings.
 
-[Unreleased]: https://github.com/ardfaiyaz/gitowl/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/ardfaiyaz/gitowl/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/ardfaiyaz/gitowl/compare/v0.1.1...v1.0.0
 [0.1.1]: https://github.com/ardfaiyaz/gitowl/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/ardfaiyaz/gitowl/releases/tag/v0.1.0

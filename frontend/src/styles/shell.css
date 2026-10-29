@@ -837,6 +837,170 @@ main.workspace-splash {
 }
 
 /* Overview */
+.repository-activity {
+  min-width: 0;
+}
+.activity-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.activity-heading h2 {
+  font-size: 17px;
+}
+.activity-heading p,
+.activity-note {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--label-2);
+}
+.activity-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 106px;
+  align-items: start;
+  gap: 24px;
+}
+.activity-main {
+  min-width: 0;
+}
+.activity-total {
+  margin: 0 0 8px;
+  color: var(--label);
+  font-size: 14px;
+}
+.activity-card {
+  padding: 16px;
+  border: 1px solid var(--separator);
+  border-radius: 6px;
+  background: var(--surface);
+}
+.activity-scroll {
+  overflow-x: auto;
+  padding: 2px;
+}
+.activity-calendar {
+  width: 100%;
+  min-width: 680px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 3px;
+  font-size: 11px;
+}
+.activity-label-column {
+  width: 32px;
+}
+.activity-calendar th,
+.activity-calendar td {
+  padding: 0;
+  font-weight: 400;
+  line-height: 16px;
+}
+.activity-calendar thead th {
+  position: relative;
+  height: 20px;
+  text-align: left;
+}
+.activity-calendar thead span {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+}
+.activity-calendar tbody th {
+  text-align: left;
+}
+.activity-day,
+.activity-day:hover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--activity-outline);
+  border-radius: 2px;
+  background: var(--activity-level);
+  transform: none;
+}
+.activity-day:hover {
+  outline: 1px solid var(--label-2);
+}
+.activity-day:focus-visible {
+  outline-offset: 0;
+}
+.activity-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+  color: var(--label-2);
+  font-size: 11px;
+}
+.activity-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+.activity-legend i {
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--activity-outline);
+  border-radius: 2px;
+}
+.activity-years {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.activity-years button {
+  justify-content: flex-start;
+  min-height: 32px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--label-2);
+  font-size: 12px;
+}
+.activity-years button:hover {
+  background: var(--hover);
+}
+.activity-years button[aria-pressed="true"] {
+  background: var(--accent-fill);
+  color: var(--on-accent);
+}
+.activity-note {
+  margin-top: 10px;
+}
+.activity-loading,
+.activity-unavailable {
+  padding: 24px;
+  border: 1px solid var(--separator);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.activity-unavailable pre {
+  margin: 12px 0;
+}
+@media (max-width: 900px) {
+  .activity-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .activity-years {
+    grid-row: 1;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .activity-years button {
+    flex: none;
+  }
+}
 .overview {
   display: flex;
   flex-direction: column;

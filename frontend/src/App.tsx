@@ -86,6 +86,7 @@ function App() {
   const [palette, setPalette] = useState(false);
   const [unread, setUnread] = useState(0);
   const [home, setHome] = useState("");
+  const [version, setVersion] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -190,10 +191,11 @@ function App() {
   }, []);
   useEffect(() => {
     let active = true;
-    api<{ repo: string | null; home: string; recent: string[] }>("bootstrap")
+    api<{ version: string; repo: string | null; home: string; recent: string[] }>("bootstrap")
       .then(async (value) => {
         if (!active) return;
         setHome(value.home);
+        setVersion(value.version);
         setRecent(value.recent);
         setFolder(value.home);
         if (value.repo) await openRepo(value.repo);
@@ -657,7 +659,7 @@ function App() {
               <h1 className="welcome-lockup">
                 <img src={dark ? "/gitowl-lockup-on-dark.svg" : "/gitowl-lockup.svg"} alt="gitowl" width="300" height="110" />
               </h1>
-              <p>Welcome · Version 0.1.0 alpha · Your Git and GitHub workspace</p>
+              <p>Welcome{version ? ` · gitowl ${version.replace(/^(\d+\.\d+)\.0$/, "$1")}` : ""} · Your Git and GitHub workspace</p>
               <div className="action-list">
                 <button disabled={busy} onClick={() => void task(() => browseTo(home))}>
                   <span className="action-icon">

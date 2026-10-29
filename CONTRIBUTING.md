@@ -168,10 +168,12 @@ gitowl follows a macOS/iOS-style design system. Read [DESIGN.md](DESIGN.md) befo
 1. Update `version` in `Cargo.toml`, run `cargo build` to refresh `Cargo.lock`, and move the
    `Unreleased` notes in [CHANGELOG.md](CHANGELOG.md) under `## [<version>] - YYYY-MM-DD`.
 2. Run the checks above and wait for branch CI to pass. Commit and push the release changes,
-   then tag that commit: `git tag -a v0.2.0 -m "gitowl v0.2.0"` and `git push origin v0.2.0`.
+   then tag that commit: `git tag -a v1.1.0 -m "gitowl 1.1"` and `git push origin v1.1.0`.
 3. `.github/workflows/release.yml` builds the Windows installer, macOS `.dmg`, Linux `.deb` and archives
    with SHA-256 checksums, and creates a **draft** release. It rejects tags that do not match
    `Cargo.toml` or lack dated changelog notes. Review the notes and artifacts, then publish it.
+   Release titles use `gitowl 1.0` (or `gitowl 1.0.1` for a patch), while Git tags retain
+   the full semantic version, such as `v1.0.0`.
 
 Code signing runs only when these repository secrets exist (otherwise artifacts are unsigned):
 `WINDOWS_CERT_PFX` (base64), `WINDOWS_CERT_PASSWORD`; `MACOS_CERT_P12` (base64), `MACOS_CERT_PASSWORD`,
