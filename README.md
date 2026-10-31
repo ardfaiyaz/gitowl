@@ -24,11 +24,11 @@
   <a href="#usage">Usage</a> ·
   <a href="#troubleshooting">Troubleshooting</a> ·
   <a href="CONTRIBUTING.md">Contributing</a> ·
-  <a href="docs/ROADMAP.md">Roadmap</a>
+  <a href="CHANGELOG.md">Release notes</a>
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/changes.png" alt="gitowl's Changes page: a list of changed files, a commit form, and a diff with an automatic plain-language explanation of the change" width="900">
+  <img src="docs/screenshots/changes.jpg" alt="gitowl's current Changes page in light mode: file staging, a commit form, spacious diffs and comparison controls" width="900">
 </p>
 
 ---
@@ -92,11 +92,21 @@
 <summary><strong>More screenshots</strong></summary>
 <br>
 
-| History | Command palette |
+Screenshots show the current interface using a sample project. Repository settings shows gitowl's public GitHub repository.
+
+| Repository activity | Repository settings |
 |---|---|
-| ![History with a selected commit and its diff](docs/screenshots/history.png) | ![Command palette filtering commands](docs/screenshots/palette.png) |
+| ![Overview with a heatmap of commits to this repository, daily activity and year selection](docs/screenshots/overview.jpg) | ![GitHub repository settings with searchable sections for general settings, access, automation and security](docs/screenshots/repository-settings.jpg) |
 | **Dark mode** | **Settings** |
-| ![Changes page in dark mode](docs/screenshots/changes-dark.png) | ![Settings with a section list and grouped rows](docs/screenshots/settings.png) |
+| ![Changes page with GitHub-style dark colors, spaced controls and green and red diff lines](docs/screenshots/changes-dark.jpg) | ![Settings with appearance, sidebar, editor and keyboard shortcut controls](docs/screenshots/settings.jpg) |
+
+**Command palette**
+
+![Command palette filtering commands to open a folder, editor, file manager or terminal](docs/screenshots/palette.jpg)
+
+**History**
+
+![History with a selected commit, undo and rewrite actions, and its highlighted diff](docs/screenshots/history.jpg)
 
 </details>
 
@@ -467,7 +477,7 @@ Still stuck? [Open an issue](https://github.com/ardfaiyaz/gitowl/issues/new/choo
 
 gitowl is a Rust program ([axum](https://github.com/tokio-rs/axum) server + [tao](https://github.com/tauri-apps/tao)/[wry](https://github.com/tauri-apps/wry) window) with a React + TypeScript interface built by Vite and embedded into the executable.
 The window talks to a server bound to `127.0.0.1` with a random per-session token. Every action runs the real `git` or `gh` executable with separate arguments (never through a shell), so gitowl behaves exactly like Git does in your terminal — hooks, signing and credential helpers included.
-See [SECURITY.md](SECURITY.md) for the full security model and [docs/PRD.md](docs/PRD.md) for the product requirements.
+See [SECURITY.md](SECURITY.md) for the full security model.
 
 ## Contributing
 
@@ -479,10 +489,6 @@ Quick start for developers:
 npm --prefix frontend ci && npm --prefix frontend run build
 cargo run
 ```
-
-## Roadmap
-
-See [docs/ROADMAP.md](docs/ROADMAP.md) for what's done and what's next, and [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## License
 

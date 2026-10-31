@@ -45,7 +45,7 @@ try {
   await time('diff 20k-line file', { op: 'diff', file: 'src/file1.txt', mode: 'working' })
   await time('branches', { op: 'branches' })
   console.table(results)
-  // Release target from the PRD: a typical repository opens within 3 seconds.
+  // Performance target: a typical repository opens within 3 seconds.
   const open = results[0].ms
   console.log(open < 3000 ? `PASS: status ${open} ms < 3000 ms target` : `SLOW: status ${open} ms exceeds 3000 ms target`)
 } finally {

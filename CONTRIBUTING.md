@@ -79,7 +79,7 @@ gitowl/
 ├── scripts/                 smoke, benchmark and live-GitHub end-to-end scripts (Node)
 ├── packaging/               Windows (Inno Setup), macOS (Info.plist), Linux (.desktop)
 ├── assets/brand/            logo masters and generated icons
-├── docs/                    product requirements, roadmap, screenshots
+├── docs/screenshots/        screenshots used in the README
 ├── DESIGN.md                interface rules every UI change follows
 └── .github/workflows/       CI (check.yml) and releases (release.yml)
 ```
